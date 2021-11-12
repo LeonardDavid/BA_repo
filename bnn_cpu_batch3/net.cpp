@@ -1,6 +1,7 @@
-#include "netW.hpp"
-#include "cuda_net.h"
 #include <iostream>
+
+#include "cuda_net.h"
+#include "netW.hpp"
 
 using namespace std;
 

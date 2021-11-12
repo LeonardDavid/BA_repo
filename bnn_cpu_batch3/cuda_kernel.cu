@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <iostream>
+
 #include "cuda_kernel.h"
 #include "netW.hpp"
+#include "utils.cuh"
 
 using namespace std;
 
@@ -63,27 +65,6 @@ using namespace std;
 
     return milliseconds;
 */
-
- // for cuda error checking
-#define cudaCheckErrors(msg) \
-do { \
-    cudaError_t __err = cudaGetLastError(); \
-    if (__err != cudaSuccess) { \
-        fprintf(stderr, "Fatal error: %s (%s at %s:%d)\n", \
-            msg, cudaGetErrorString(__err), \
-            __FILE__, __LINE__); \
-        fprintf(stderr, "*** FAILED - ABORTING\n"); \
-        return 1; \
-    } \
-} while (0)
-
-__device__ int index3D_cuda(const int x, const int y, const int z, const int sizey, const int sizez) {
-    return x*sizey*sizez + y*sizez + z;
-}
-
-__device__ int index4D_cuda(const int x, const int y, const int z, const int t, const int sizey, const int sizez, const int sizet){
-    return x*sizey*sizez*sizet + y*sizez*sizet + z*sizet + t;
-}
 
 // Layer 1 - Convolution
 

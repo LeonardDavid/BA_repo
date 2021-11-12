@@ -1,7 +1,7 @@
 /*
-Run with: 
-$ make
-$ ./cuda_net
+    Run with: 
+    $ make
+    $ ./cuda_net
 */
 
 #include <iostream>
@@ -10,6 +10,8 @@ $ ./cuda_net
 #include <tuple>
 
 #include "MNISTLoader.h"
+#include "utils.h"
+
 #ifdef BINARY
 #define INPUT_FEATURE char
 #include "net.hpp"
@@ -22,19 +24,6 @@ $ ./cuda_net
 #endif
 
 using namespace std;
-
-/*
-    the following are included in cuda_kernel.h and should be put later in another utilities header to also be available in main
-*/
-#define BATCH_SIZE 4
-
-inline int index3D(const int x, const int y, const int z, const int sizey, const int sizez) {
-    return x*sizey*sizez + y*sizez + z;
-}
-
-inline int index4D(const int x, const int y, const int z, const int t, const int sizey, const int sizez, const int sizet){
-    return x*sizey*sizez*sizet + y*sizez*sizet + z*sizet + t;
-}
 
 auto benchmark(MNISTLoader &loader0, MNISTLoader &loader1, MNISTLoader &loader2, MNISTLoader &loader3, bool verbose = false) {
 #if defined BINARY || defined INT16

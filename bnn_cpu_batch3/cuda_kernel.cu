@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 
 #include "cuda_kernel.h"
 #include "netW.hpp"
@@ -208,8 +209,10 @@ __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cud
         }
         for (int kH = 0; kH < 2; kH++) {
             for (int kW = 0; kW < 2; kW++) {
-                for (int c = 0; c < 64; c++) {
-                    d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = fmax(d_cuda_layer_1_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,28,64)], d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)]);
+                for(int b = 0; b < BATCH_SIZE; b++){
+                    for (int c = 0; c < 64; c++) {
+                        d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)]);
+                    }
                 }
             }
         }

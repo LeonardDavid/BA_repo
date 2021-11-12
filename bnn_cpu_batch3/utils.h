@@ -1,4 +1,4 @@
-#define BATCH_SIZE 4
+#define BATCH_SIZE 1
 
 inline int index3D(const int x, const int y, const int z, const int sizey, const int sizez) {
     return x*sizey*sizez + y*sizez + z;

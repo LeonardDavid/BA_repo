@@ -17,24 +17,24 @@ static float layer_1_output[28][28][64];
 static float cuda_layer_1_output[4*50176];
 
 static float layer_2_output[14][14][64];
-// static float cuda_layer_2_output[12544];
+static float cuda_layer_2_output[12544];
 
 // layer_3_output is ALREADY filled with values. HOW??
 static unsigned long long layer_3_output[14][14][1]; // x64 addresses as hex
-// static unsigned long long cuda_layer_3_output[12544]; // 196?
+static unsigned long long cuda_layer_3_output[12544]; // 196?
 
 static signed short layer_4_output[14][14][64];
-// static signed short cuda_layer_4_output[12544];
+static signed short cuda_layer_4_output[12544];
 
 static signed short layer_5_output[7][7][64];
-// static signed short cuda_layer_5_output[3136];
+static signed short cuda_layer_5_output[3136];
 
 static unsigned long long layer_6_output[7][7][1]; // x64 adresses as hex
-// static unsigned long long cuda_layer_6_output[3136]; // 49?
+static unsigned long long cuda_layer_6_output[3136]; // 49?
 
 static signed short layer_8_output[2048];
 // only needed for comparison purposes
-// static signed short cuda_layer_8_output[2048];
+static signed short cuda_layer_8_output[2048];
 
 static unsigned long long layer_9_output[32];
 // only needed for comparison purposes
@@ -42,4 +42,4 @@ static unsigned long long layer_9_output[32];
 
 static signed short layer_10_output[10];
 // only needed for comparison purposes
-// static signed short cuda_layer_10_output[10];
+static signed short cuda_layer_10_output[10];

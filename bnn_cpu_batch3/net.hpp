@@ -1,2 +1,2 @@
 #pragma once
-		void predict_NeuralNet(unsigned char * const x, float * pred);
+		float predict_NeuralNet(unsigned char * const x, float * pred);

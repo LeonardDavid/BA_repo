@@ -66,9 +66,6 @@ private:
     }   
 
 public:
-
-    MNISTLoader(){}
-
     MNISTLoader(std::string image_file, std::string label_file, int num) 
         : m_size(0), m_rows(0), m_cols(0) {
         load_images(image_file, num);
@@ -78,10 +75,17 @@ public:
     MNISTLoader(std::string image_file, std::string label_file) 
         : MNISTLoader(image_file, label_file, 0) {}
 
-    ~MNISTLoader() {
-        delete m_labels;
-        delete m_images;
-    }
+    MNISTLoader(){}
+
+    /*
+        Deconstructor leads to segmentation fault when:
+            - trying to access loaderx[0]
+            - at the end of the programm
+    */
+    // ~MNISTLoader() {
+    //     delete m_labels;
+    //     delete m_images;
+    // }
 
     int size() { return m_size; }
     int rows() { return m_rows; }

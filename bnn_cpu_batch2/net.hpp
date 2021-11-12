@@ -1,5 +1,5 @@
 #define MAX_THREADS 12 	// MAX_THREADS for LDB-XPS: 12
-#define BATCH_SIZE 5	// BATCH_SIZE <= MAX_THREADS
+#define BATCH_SIZE 4 	// BATCH_SIZE <= MAX_THREADS
 
 /*
 	we don't talk about this

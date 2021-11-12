@@ -1,7 +1,7 @@
 /*
     Run with: 
     $ make
-    $ ./cuda_net
+    $ ./batch_par_gpu.o
 */
 
 #include <iostream>

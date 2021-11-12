@@ -1,3 +1,9 @@
+/*
+    run with
+    $ g++ add%10.cpp -o add.o
+    $ ./add.o
+*/
+
 #include<iostream>
 #include<fstream>
 

@@ -1,7 +1,7 @@
 /*
     Run with: 
     $ make
-    $ ./cuda_net
+    $ ./cuda_net.o
 */
 
 #include <iostream>

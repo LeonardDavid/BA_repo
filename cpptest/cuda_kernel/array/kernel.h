@@ -1,0 +1,1 @@
+int matadd(short *x);

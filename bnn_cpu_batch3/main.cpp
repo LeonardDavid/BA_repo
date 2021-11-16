@@ -37,14 +37,21 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     int const imgsize = 28*28;
     int lsize = loaderx[0].size();
     float total_kernel_time = 0;
-
+    
     auto start = std::chrono::high_resolution_clock::now();
     for (unsigned int i = 0; i < lsize; i+=factor) { // i := # image
         std::fill(output, output+10*BATCH_SIZE, 0);
 
         // make all of these declarations pretier later, maybe with pointers
         // load (flattened) image i of every batch in 1 array, at a distance of imgsize
-        unsigned char img[BATCH_SIZE*imgsize];
+        /*
+            gives segmentation fault for BATCH_SIZE>4
+                - declare multiple *img each of size BATCH_SIZE*imgsize and execute them in kernel on gridY?
+        */
+       
+        unsigned char * img; //img[BATCH_SIZE*imgsize];
+        img = (unsigned char*) malloc (BATCH_SIZE*imgsize);
+
         // load label i of corresponding image from every batch in an array
         int label[BATCH_SIZE];
 
@@ -54,7 +61,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
             }
             label[b] = loaderx[b].labels(i); // loaderx[b].labels(i);
         }
-
+        
         // // display img array (remove for before)
         // for(int b=0;b<BATCH_SIZE;b++){
         //     printf("batch: %d, label %d:\n",b,label[b]);
@@ -92,6 +99,9 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     auto end = std::chrono::high_resolution_clock::now();
 
     float accuracy[BATCH_SIZE];
+    if(BATCH_SIZE>1){
+        printf("Note:Current build gives a correct accuracy only for BATCH_SIZE=1\nFor more batches it only calculates the first layer correctly in parallel.\n");
+    }
     for(int b = 0; b < BATCH_SIZE; b++){
         accuracy[b] = static_cast<float>(matches[b]) / (lsize/factor) * 100.f;
         printf("Accuracy batch %d: %.1f%\n", b, accuracy[b]);
@@ -117,9 +127,13 @@ int main() {
     printf("\n");
     auto end = std::chrono::high_resolution_clock::now();
     auto batch_loading_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
-
+    printf("Batch loading time: %.2f [s] => Latency: %.4f [s/batch]\n", batch_loading_time/1000.0f, batch_loading_time/BATCH_SIZE/1000.0f);
+    printf("\n");
+/*
+    Segmentation fault here?
+*/
     auto results = benchmark(loaderx);
-    
+
     /*
         For some reason, printing the accuracy here always leads to "0.0%"
         Therefore it is printed in benchmark()
@@ -130,8 +144,6 @@ int main() {
     // }
 
     printf("\n");
-    printf("Batch loading time: %.2f [s] => Latency: %.4f [s/batch]\n", batch_loading_time/1000.0f, batch_loading_time/BATCH_SIZE/1000.0f);
-    
     printf("Total CPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<1>(results)/1000.0f, std::get<2>(results));
     printf("Total GPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<3>(results)/1000.0f, std::get<4>(results));
 

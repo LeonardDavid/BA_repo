@@ -6,12 +6,13 @@
 using namespace std;
 
 float predict_NeuralNet(unsigned char * const x, float * pred) {
+  // possibly not valid c++ code:
   // unsigned char (*layer_0_output)[28][1] = (unsigned char (*)[28][1]) x;
 
   // add all kernel_time s
   float kernel_time = 0;
   kernel_time += layer1_conv(x, cuda_layer_1_output);
-  
+  float l1_kernel_time = kernel_time;
   kernel_time += layer2_maxpool(cuda_layer_1_output, cuda_layer_2_output);
 
   /*
@@ -182,6 +183,6 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
     pred[i] += cuda_layer_10_output[i];
   }
 
-  return kernel_time;
+  return l1_kernel_time;
 
 }

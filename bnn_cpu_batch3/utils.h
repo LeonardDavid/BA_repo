@@ -1,4 +1,4 @@
-#define BATCH_SIZE 8
+#define BATCH_SIZE 11
 
 #pragma once 
 inline int index3D(const int x, const int y, const int z, const int sizey, const int sizez) {

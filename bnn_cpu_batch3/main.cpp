@@ -100,7 +100,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
 
     float accuracy[BATCH_SIZE];
     if(BATCH_SIZE>1){
-        printf("Note:Current build gives a correct accuracy only for BATCH_SIZE=1\nFor more batches it only calculates the first layer correctly in parallel.\n");
+        printf("Note: Current build gives a correct accuracy only for BATCH_SIZE=1\nFor more batches it only calculates the first layer correctly in parallel.\n");
     }
     for(int b = 0; b < BATCH_SIZE; b++){
         accuracy[b] = static_cast<float>(matches[b]) / (lsize/factor) * 100.f;
@@ -108,8 +108,8 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     }
 
     auto total_cpu_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
-    auto cpu_time = static_cast<float>(total_cpu_time) / (lsize/factor);
-    auto kernel_time = static_cast<float>(total_kernel_time) / (lsize/factor);
+    auto cpu_time = static_cast<float>(total_cpu_time) / (lsize/factor) / BATCH_SIZE;
+    auto kernel_time = static_cast<float>(total_kernel_time) / (lsize/factor) / BATCH_SIZE;
 
     return std::make_tuple(accuracy, total_cpu_time, cpu_time, total_kernel_time, kernel_time);
 }

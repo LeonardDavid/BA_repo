@@ -51,6 +51,10 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     cudnnCreate(&handle_);
     cout << "Created cuDNN handle" << endl << endl;
 
+    
+    ofstream g ("original.out");
+    ofstream gg ("new.out");
+
     int factor = 1;
     int matches[BATCH_SIZE] = {0};
     int const imgsize = 28*28;
@@ -91,7 +95,6 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
             label[b] = loaderx[b].labels(i); // loaderx[b].labels(i);
         }
         
-        ofstream g ("data.out");
         // display img array (remove for before)
         cout<<"Original image: "<<endl;
         for(int b=0;b<BATCH_SIZE;b++){
@@ -101,13 +104,14 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
                 for (int j = 0; j < 28; j++)
                 {
                     // img[i*28 + j] < 128 ? img[i*28 + j] = 0 : img[i*28 + j] = 255;
-                    printf("%d ", img[index3D(b,i,j,28,28)]);
-                    g<<img[index3D(b,i,j,28,28)]<<" ";
+                    // printf("%d ", img[index3D(b,i,j,28,28)]);
+                    g<<int(img[index3D(b,i,j,28,28)])<<" ";
                     // printf("%d ", img[i*28+j]);
                 }
-                printf("\n");
+                // printf("\n");
+                g<<"\n";
             }
-            printf("\n\n");
+            // printf("\n\n");
         }
 
         // create activation function descriptor
@@ -142,12 +146,14 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
                 for (int j = 0; j < 28; j++)
                 {
                     // img[i*28 + j] < 128 ? img[i*28 + j] = 0 : img[i*28 + j] = 255;
-                    printf("%d ", img[index3D(b,i,j,28,28)]);
+                    // printf("%d ", img[index3D(b,i,j,28,28)]);
+                    gg<<int(img[index3D(b,i,j,28,28)])<<" ";
                     // printf("%d ", img[i*28+j]);
                 }
-                printf("\n");
+                // printf("\n");
+                gg<<"\n";
             }
-            printf("\n\n");
+            // printf("\n\n");
         }
         
         cudaFree(img);

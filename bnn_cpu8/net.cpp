@@ -18,13 +18,17 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
         - uncomment lines 19-50
         - comment lines 58-126
   */
-  
+  // unsigned long long *cuda_layer_3_output = (unsigned long long *) layer_3_output;
   // layer3_step(cuda_layer_2_output, cuda_layer_3_output);
   
   /* Layer 3 does not work because:
     - if run without the line 'layer_3_output[h][w][c / 64] |= (1ULL << (63 - c % 64));' every element will be 0
     - for ABSOLUTELY NO REASON if the line is present AFTER (!!) the cout/calculation with l30, the correct answer will be calculated
   */
+
+ /*
+    - kernel calculates for layer_3_output[h][w][0] correctly, but from 0-64 not
+ */ 
  
   for (int h = 0; h < 14; h++) {
     for (int w = 0; w < 14; w++) {
@@ -62,7 +66,8 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
   // cout<<endl;
   // cout<<"--------------------------------begin-CPU----------------------------"<<endl;
 
-  // int sum1,sum2;
+  // int sum1;
+  // float sum2;
   // unsigned long long *cuda_layer_3_output = (unsigned long long *) layer_3_output;
 
   // for (int h = 0; h < 14; h++) {
@@ -85,6 +90,7 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
   //   }
   //   // cout<<endl;
   // }
+  // cout<<endl;
 
   // // cout<<"layer3_output[14][14]: "<<endl;
   // // for (int h = 0; h < 14; h++) {
@@ -99,6 +105,8 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
   // // summation of ULL values leads to overflow -> sum up only the last digit
   // for (int h = 0; h < 14; h++) {
   //   for (int w = 0; w < 14; w++) {
+  //     // sum1 += layer_3_output[h][w][0]%10;
+  //     // cout<<layer_3_output[h][w][0]<<" ";
   //     for (int m = 0; m < 64; m++) {
   //       sum1 += layer_3_output[h][w][m]%10;
   //       // cout<<layer_3_output[h][w][m]<<" ";
@@ -113,7 +121,41 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
   // cout<<endl;
   // cout<<"--------------------------------begin-GPU----------------------------"<<endl;
   // sum2 = 0;
+
   // sum2 = layer3_step(cuda_layer_2_output, cuda_layer_3_output);
+
+  // // for (int h = 0; h < 14; h++) {
+  // //   for (int w = 0; w < 14; w++) {
+  // //     for (int c = 0; c < 64; c++) {
+  // //       // printf("1 ");
+  // //       if (cuda_layer_2_output[index3D(h,w,c,14,64)] > layer_3_threshold[c]) {
+  // //         // printf("%d ", layer_3_threshold[c]);
+  // //         // cout<<"("<<layer_3_output[h][w][c/64]<<" - ";
+  // //         slayer_3_output[h][w][c/64] = 1;// |= (1ULL << (63 - c % 64));
+  // //         // cout<<layer_3_output[h][w][c/64]<<") ";
+  // //       } else {
+  // //         // printf("%d ", layer_3_threshold[c]);
+  // //         // cout<<"("<<layer_3_output[h][w][c/64]<<" - ";
+  // //         slayer_3_output[h][w][c/64] = -1; //&= ~(1ULL << (63 - c % 64));
+  // //         // cout<<layer_3_output[h][w][c/64]<<") ";
+  // //       }
+  // //     }
+  // //     // cout<<endl;
+  // //   }
+  // //   // cout<<endl;
+  // // }
+
+  // // for (int h = 0; h < 14; h++) {
+  // //   for (int w = 0; w < 14; w++) {
+  // //     for (int m = 0; m < 64; m++) {
+  // //       sum2 += slayer_3_output[h][w][m]%10;
+  // //       cout<<slayer_3_output[h][w][m]<<" ";
+  // //     }
+  // //   }
+  // //   cout<<endl;
+  // // }
+  // // cout<<endl;
+
   // // cout<<endl<<sum2<<endl;
   // cout<<endl;
   // cout<<"---------------------------------end-GPU-----------------------------"<<endl;
@@ -123,7 +165,7 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
   // }else{
   //   cout<<"PASS"<<endl;
   // }
-  // printf("cpp: %d - cuda: %d\n",sum1,sum2);
+  // printf("cpp: %d - cuda: %f\n",sum1,sum2);
 
   // cout<<"---------------------------------end---------------------------------"<<endl;
   // cout<<endl<<endl;

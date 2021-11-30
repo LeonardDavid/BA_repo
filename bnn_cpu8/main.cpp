@@ -37,7 +37,7 @@ auto benchmark(MNISTLoader &loader, bool verbose = false) {
             - replace loader.images(i) with loader.images(0)
             - replace loader.labels(i) with loader.labels(0)
     */
-    for (unsigned int i = 0; i < loader.size(); i+=factor) {
+    for (unsigned int i = 0; i < loader.size(); i+=factor) { // i < loader.size()
         std::fill(output, output+10, 0);
 
         unsigned char * const  img = loader.images(i);

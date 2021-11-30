@@ -312,7 +312,10 @@ __global__ void layer3_step_kernel(float *d_cuda_layer_2_output, signed short *d
                 // if(h==1)
                     // printf("%llu ",d_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)]);
                 // printf("(%llu - ",d_res_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)]);
-                d_res_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] = d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] | (1ULL << (63 - c % 64));
+                /*
+                    tried different combination here c,(c/64),0,1,64,14
+                */
+                d_res_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)] = d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] | (1ULL << (63 - c % 64));
                 // d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] |= (1ULL << (63 - c % 64));
                 // printf("%llu) ",d_res_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)]);
             } else {
@@ -320,7 +323,7 @@ __global__ void layer3_step_kernel(float *d_cuda_layer_2_output, signed short *d
                 // if(h==1)
                     // printf("~%llu ",d_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)]);
                 // printf("(%llu - ",d_res_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)]);
-                d_res_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] = d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] & ~(1ULL << (63 - c % 64));
+                d_res_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)] = d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] & ~(1ULL << (63 - c % 64));
                 // d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] &= ~(1ULL << (63 - c % 64));
                 // printf("%llu) ",d_res_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)]);
             }
@@ -398,16 +401,14 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
     cudaCheckErrors("cudaFree fail");
 
     // checksum
-    // int sum = 0;
-    // // summation of ULL values leads to overflow -> sum up only the last digit
-    // for (int i = 0; i < 12544; i++) {
-    //     // if(i%196==0)
-    //     //     cout<<endl;
-    //     // cout<<cuda_layer_3_output[i]<<" ";
-    //     sum += cuda_layer_3_output[i]%10; 
-    // }
+    float sum = 0;
+    // summation of ULL values leads to overflow -> sum up only the last digit
+    for (int i = 0; i < 12544; i++) {
+        cout<<cuda_layer_3_output[i]<<" ";
+        sum += cuda_layer_3_output[i]%10; 
+    }
 
-    return milliseconds;
+    return sum;
 }
 
 // END WORK IN PROGRESS

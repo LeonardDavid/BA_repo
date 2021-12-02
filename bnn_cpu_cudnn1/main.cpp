@@ -34,7 +34,13 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     int output[BATCH_SIZE*10] = {0};
 #else
     float output[BATCH_SIZE*10] = {0};
+    std::fill(output, output+10*BATCH_SIZE, 0);
 #endif
+
+    auto startcpu = std::chrono::high_resolution_clock::now();
+
+    ofstream g ("original.out");
+    ofstream gg ("new.out");
 
     int numGPUs;
     cudaGetDeviceCount(&numGPUs);
@@ -51,134 +57,126 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     cudnnCreate(&handle_);
     cout << "Created cuDNN handle" << endl << endl;
 
-    
-    ofstream g ("original.out");
-    ofstream gg ("new.out");
-
     int factor = 1;
     int matches[BATCH_SIZE] = {0};
     int const imgsize = 28*28;
-    int lsize = loaderx[0].size();
+    int lsize = 1904/BATCH_SIZE; //loaderx[0].size();
+    // max lsize for 1 batch: 1904
+    // max lsize for n batches: floor(1904/n)
+    printf("lsize: %d\n", lsize);
     float total_kernel_time = 0;
 
     // create the tensor descriptor
     cudnnDataType_t dtype = CUDNN_DATA_FLOAT;
     cudnnTensorFormat_t format = CUDNN_TENSOR_NHWC;
-    int n = 1, h = 28, w = 28, c = 1;
+    int n = lsize, h = 28, w = 28, c = 1;
     int NUM_ELEMENTS = n*c*h*w;
     cudnnTensorDescriptor_t x_desc;
     cudnnCreateTensorDescriptor(&x_desc);
     cudnnSetTensor4dDescriptor(x_desc, format, dtype, n, h, w, c);
     
-    auto start = std::chrono::high_resolution_clock::now();
-    for (unsigned int i = 0; i < 1; i+=factor) { // i := # image // i < lsize
-        std::fill(output, output+10*BATCH_SIZE, 0);
+    unsigned char * img; //img[BATCH_SIZE*imgsize];
+    img = (unsigned char*) malloc (NUM_ELEMENTS*BATCH_SIZE*imgsize);
+    cudaMallocManaged(&img, NUM_ELEMENTS * BATCH_SIZE * imgsize * sizeof(unsigned char));
 
-        // make all of these declarations pretier later, maybe with pointers
-        // load (flattened) image i of every batch in 1 array, at a distance of imgsize
-        /*
-            gives segmentation fault for BATCH_SIZE>4
-                - declare multiple *img each of size BATCH_SIZE*imgsize and execute them in kernel on gridY?
-        */
-       
-        unsigned char * img; //img[BATCH_SIZE*imgsize];
-        // img = (unsigned char*) malloc (BATCH_SIZE*imgsize);
-        cudaMallocManaged(&img, NUM_ELEMENTS * BATCH_SIZE * sizeof(unsigned char));
+    // load label i of corresponding image from every batch in an array
+    int label[BATCH_SIZE];
 
-        // load label i of corresponding image from every batch in an array
-        int label[BATCH_SIZE];
-
-        for(int b=0; b<BATCH_SIZE; b++){    // b := # batch
+    for(int b=0; b<BATCH_SIZE; b++){        // b := # batch
+        for(int i=0; i<lsize; i+=factor){         // i := # image
             for(int p=0; p<imgsize; p++){   // p := # pixel
-                img[b*imgsize+p] = loaderx[b].images(i)[p]; //  loaderx[b].images(i)[p];
+                img[index3D(b,i,p,lsize,imgsize)] = loaderx[b].images(i)[p]; //  loaderx[b].images(i)[p];
             }
-            label[b] = loaderx[b].labels(i); // loaderx[b].labels(i);
+            // label[b] = loaderx[b].labels(i); // loaderx[b].labels(i);
         }
-        
-        // display img array (remove for before)
-        cout<<"Original image: "<<endl;
-        for(int b=0;b<BATCH_SIZE;b++){
-            // printf("batch: %d, label %d:\n",b,label[b]);
+    }
+    
+    // display img array
+    // cout<<"Original image: "<<endl;
+    for(int b=0;b<BATCH_SIZE;b++){
+        // printf("batch: %d, label %d:\n",b,label[b]);
+        for(int im=0;im<lsize;im+=factor){
             for (int i = 0; i < 28; i++)
             {
                 for (int j = 0; j < 28; j++)
                 {
-                    // img[i*28 + j] < 128 ? img[i*28 + j] = 0 : img[i*28 + j] = 255;
-                    // printf("%d ", img[index3D(b,i,j,28,28)]);
-                    g<<int(img[index3D(b,i,j,28,28)])<<" ";
-                    // printf("%d ", img[i*28+j]);
+                    // printf("%d ", img[index4D(b,im,i,j,lsize,28,28)]);
+                    g<<int(img[index4D(b,im,i,j,lsize,28,28)])<<" ";
                 }
                 // printf("\n");
                 g<<"\n";
             }
             // printf("\n\n");
+            g<<"\n\n";
         }
+    }
 
-        // create activation function descriptor
-        float alpha[1] = {1};
-        float beta[1] = {0.0};
-        cudnnActivationDescriptor_t sigmoid_activation;
-        cudnnActivationMode_t mode = CUDNN_ACTIVATION_SIGMOID;
-        cudnnNanPropagation_t prop = CUDNN_NOT_PROPAGATE_NAN;
-        cudnnCreateActivationDescriptor(&sigmoid_activation);
-        cudnnSetActivationDescriptor(sigmoid_activation, mode, prop, 0.0f);
+    // create activation function descriptor
+    float alpha[1] = {1};
+    float beta[1] = {0.0};
+    cudnnActivationDescriptor_t sigmoid_activation;
+    cudnnActivationMode_t mode = CUDNN_ACTIVATION_SIGMOID;
+    cudnnNanPropagation_t prop = CUDNN_NOT_PROPAGATE_NAN;
+    cudnnCreateActivationDescriptor(&sigmoid_activation);
+    cudnnSetActivationDescriptor(sigmoid_activation, mode, prop, 0.0f);
 
-        cudnnActivationForward(
-            handle_,
-            sigmoid_activation,
-            alpha,
-            x_desc,
-            img,
-            beta,
-            x_desc,
-            img
-        );
+    auto startgpu = std::chrono::high_resolution_clock::now();
+    cudnnActivationForward(
+        handle_,
+        sigmoid_activation,
+        alpha,
+        x_desc,
+        img,
+        beta,
+        x_desc,
+        img
+    );
+    auto endgpu = std::chrono::high_resolution_clock::now();
 
-        // handle has to be destroyed before accesing img
-        cudnnDestroy(handle_);
-        cout << endl << "Destroyed cuDNN handle." << endl << endl;
+    // handle has to be destroyed before accesing img
+    cudnnDestroy(handle_);
+    cout << endl << "Destroyed cuDNN handle." << endl << endl;
 
-        cout<<"New image: "<<endl;
-        for(int b=0;b<BATCH_SIZE;b++){
-            // printf("batch: %d, label %d:\n",b,label[b]);
+    // cout<<"New image: "<<endl;
+    for(int b=0;b<BATCH_SIZE;b++){
+        // printf("batch: %d, label %d:\n",b,label[b]);
+        for(int im=0;im<lsize;im+=factor){
             for (int i = 0; i < 28; i++)
             {
                 for (int j = 0; j < 28; j++)
                 {
-                    // img[i*28 + j] < 128 ? img[i*28 + j] = 0 : img[i*28 + j] = 255;
-                    // printf("%d ", img[index3D(b,i,j,28,28)]);
-                    gg<<int(img[index3D(b,i,j,28,28)])<<" ";
-                    // printf("%d ", img[i*28+j]);
+                    // printf("%d ", img[index4D(b,im,i,j,lsize,28,28)]);
+                    gg<<int(img[index4D(b,im,i,j,lsize,28,28)])<<" ";
                 }
                 // printf("\n");
                 gg<<"\n";
             }
             // printf("\n\n");
+            gg<<"\n\n";
         }
-        
-        cudaFree(img);
-        
-        // total_kernel_time += predict_NeuralNet(img, output);
-        
-        // for(int b = 0; b < BATCH_SIZE; b++){
-        //     float max = output[b*10];
-        //     int argmax = 0;
-        //     for (int j = 1; j < 10; j++) {
-        //         if (output[b*10 + j] > max) {
-        //             max = output[b*10 + j];
-        //             argmax = b*10 + j;
-        //         }
-        //     }
-
-        //     if (argmax == label[b]) {
-        //         matches[b]++;
-        //     }
-        // }
-        
     }
-    auto end = std::chrono::high_resolution_clock::now();
+    
+    // free the memory after done using img array 
+    cudaFree(img);
+    
+    // total_kernel_time += predict_NeuralNet(img, output);
+    
+    // for(int b = 0; b < BATCH_SIZE; b++){
+    //     float max = output[b*10];
+    //     int argmax = 0;
+    //     for (int j = 1; j < 10; j++) {
+    //         if (output[b*10 + j] > max) {
+    //             max = output[b*10 + j];
+    //             argmax = b*10 + j;
+    //         }
+    //     }
 
-
+    //     if (argmax == label[b]) {
+    //         matches[b]++;
+    //     }
+    // }
+    auto endcpu = std::chrono::high_resolution_clock::now();
+    
     float accuracy[BATCH_SIZE];
     // if(BATCH_SIZE>1){
     //     printf("Note: Current build gives a correct accuracy only for BATCH_SIZE=1\nFor more batches it only calculates the first layer correctly in parallel.\n");
@@ -188,11 +186,14 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     //     printf("Accuracy batch %d: %.1f%\n", b, accuracy[b]);
     // }
 
-    auto total_cpu_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
+    auto total_gpu_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(endgpu-startgpu).count());
+    auto gpu_time = static_cast<float>(total_gpu_time) / (lsize/factor) / BATCH_SIZE;
+    
+    auto total_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(endcpu-startcpu).count());
+    auto total_cpu_time = total_time - total_gpu_time;
     auto cpu_time = static_cast<float>(total_cpu_time) / (lsize/factor) / BATCH_SIZE;
-    auto kernel_time = static_cast<float>(total_kernel_time) / (lsize/factor) / BATCH_SIZE;
 
-    return std::make_tuple(accuracy, total_cpu_time, cpu_time, total_kernel_time, kernel_time);
+    return std::make_tuple(accuracy, total_cpu_time, cpu_time, total_kernel_time, gpu_time);
 }
 
 int main() {
@@ -222,9 +223,10 @@ int main() {
     //     printf("Accuracy batch %d: %.1f%\n", b, std::get<0>(results)[b]);
     // }
 
+
     printf("\n");
     printf("Total CPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<1>(results)/1000.0f, std::get<2>(results));
-    // printf("Total GPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<3>(results)/1000.0f, std::get<4>(results));
+    printf("Total GPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<3>(results)/1000.0f, std::get<4>(results));
 
     return 0;
 }

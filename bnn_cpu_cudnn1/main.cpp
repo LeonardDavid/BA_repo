@@ -193,7 +193,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     auto total_cpu_time = total_time - total_gpu_time;
     auto cpu_time = static_cast<float>(total_cpu_time) / (lsize/factor) / BATCH_SIZE;
 
-    return std::make_tuple(accuracy, total_cpu_time, cpu_time, total_kernel_time, gpu_time);
+    return std::make_tuple(accuracy, total_cpu_time, cpu_time, total_gpu_time, gpu_time);
 }
 
 int main() {

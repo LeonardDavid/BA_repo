@@ -16,7 +16,7 @@ int main(){
     unsigned long long a;
     while(!f.eof()){
         f>>a;
-        sum += a%10; 
+        sum += a; 
         count++;
     }
     cout<<fixed<<"elements: "<<count<<endl<<"sum: "<<sum<<endl;

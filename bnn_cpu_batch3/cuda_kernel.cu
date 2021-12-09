@@ -102,10 +102,10 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
 
 float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
-    size_t free, total;
-    printf("\n");
-    cudaMemGetInfo(&free,&total);   
-    printf("before: %d KB free of total %d KB\n",free/1024,total/1024);
+    // size_t free, total;
+    // printf("\n");
+    // cudaMemGetInfo(&free,&total);   
+    // printf("before: %d KB free of total %d KB\n",free/1024,total/1024);
     
     // initialize layer_0_output where x is the input image
     unsigned char (*layer_0_output)[BATCH_SIZE][28][1] = (unsigned char (*)[BATCH_SIZE][28][1]) x;
@@ -131,8 +131,8 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
     cudaCheckErrors("Failed to allocate device buffer");
 
-    cudaMemGetInfo(&free,&total);   
-    printf("after: %d KB free of total %d KB\n",free/1024,total/1024);
+    // cudaMemGetInfo(&free,&total);   
+    // printf("after: %d KB free of total %d KB\n",free/1024,total/1024);
 
     // copy input data from host on device
     cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*784*sizeof(unsigned char)), cudaMemcpyHostToDevice);

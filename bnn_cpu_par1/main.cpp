@@ -26,11 +26,13 @@
 using namespace std;
 
 auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
-#if defined BINARY || defined INT16
-    int output[BATCH_SIZE*10] = {0};
-#else
-    float output[BATCH_SIZE*10] = {0};
-#endif
+// #if defined BINARY || defined INT16
+//     int output[BATCH_SIZE*10]; // = {0};
+// #else
+//     float output[BATCH_SIZE*10]; // = {0};
+// #endif
+
+    float output[10];
 
     int factor = 1;
     int matches[BATCH_SIZE] = {0};
@@ -40,7 +42,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     
     auto start = std::chrono::high_resolution_clock::now();
     for (unsigned int i = 0; i < 1; i+=factor) { // i := # image
-        std::fill(output, output+10*BATCH_SIZE, 0);
+        std::fill(output, output+10, 0);
 
         // make all of these declarations pretier later, maybe with pointers
         // load (flattened) image i of every batch in 1 array, at a distance of imgsize
@@ -60,6 +62,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
                 img[b*imgsize+p] = loaderx[b].images(i)[p]; //  loaderx[b].images(i)[p];
             }
             label[b] = loaderx[b].labels(i); // loaderx[b].labels(i);
+            // printf("b: %d, label: %d\n",b,label[b]);
         }
         
         // // display img array (remove for before)
@@ -79,8 +82,18 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
         // }
         
         total_kernel_time += predict_NeuralNet(img, output);
+
+        printf("label: %d, out: ", label[0]);
+        for(int i=0;i<10;i++){
+            printf("%d ", output[i]);
+        }
         
         for(int b = 0; b < BATCH_SIZE; b++){
+            // printf("b: %d, label: %d, out: ", b, label[b]);
+            // for(int i=0;i<10;i++){
+            //     printf("%d ", output[i]);
+            // }
+
             float max = output[b*10];
             int argmax = 0;
             for (int j = 1; j < 10; j++) {
@@ -92,7 +105,9 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
 
             if (argmax == label[b]) {
                 matches[b]++;
+                // printf("b: %d: match: %d\n", b, matches[b]);
             }
+            cout<<endl;
         }
         
     }
@@ -103,7 +118,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
         printf("Note: Current build gives a correct accuracy only for BATCH_SIZE=1\nFor more batches it only calculates the first layer correctly in parallel.\n");
     }
     for(int b = 0; b < BATCH_SIZE; b++){
-        accuracy[b] = static_cast<float>(matches[b]) / (lsize/factor) * 100.f;
+        accuracy[b] = static_cast<float> (matches[b]) / (lsize/factor) * 100.f;
         printf("Accuracy batch %d: %.1f%\n", b, accuracy[b]);
     }
 

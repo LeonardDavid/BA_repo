@@ -71,29 +71,34 @@ using namespace std;
 
 __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *d_layer_1_bias, signed char *d_cuda_layer_1_weight, float *d_cuda_layer_1_output){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
+    // int h = blockDim.x * blockIdx.x + threadIdx.x; // only works for batch 0
+    int h = threadIdx.x; // modified for work with multiple batches
     int w = blockDim.y * blockIdx.y + threadIdx.y;
-    int m = blockDim.z * blockIdx.z + threadIdx.z;
+    
+    int m = blockIdx.z; // Neurons index on z grid
+
+    int b = blockIdx.x; // Batches index on x grid
     
     if (h<28 && w<28){
-        for(int b=0;b<BATCH_SIZE;b++){
+        if(b<BATCH_SIZE){
             if(m<NR_NEURONS) {
                 d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
             }
         }
+
         for (int kH = 0; kH < 3; kH++) {
         int iH = h * 1 + kH - 1;
         if (iH >= 0 && iH < 28) {
             for (int kW = 0; kW < 3; kW++) {
             int iW = w * 1 + kW - 1;
             if (iW >= 0 && iW < 28) {
-                for(int b=0;b<BATCH_SIZE;b++){
-                    for (int c = 0; c < 1; c++) {
-                        if(m<NR_NEURONS) {
-                            d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+                    if(b<BATCH_SIZE){
+                        for (int c = 0; c < 1; c++) {
+                            if(m<NR_NEURONS) {
+                                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+                            }
                         }
                     }
-                }
             }
             }
         }
@@ -145,7 +150,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     // const int dataxsize = 28;
     // const int dataysize = 28;
     // const int datamul = dataxsize*dataysize;
-    const int BLKXSIZE = 28;
+    const int BLKXSIZE = 28; // optimization: making the number of threads per block a multiple of 32: 256/512
     const int BLKYSIZE = 28;
     const int GRIDXSIZE = BATCH_SIZE;
     const int GRIDYSIZE = 1;
@@ -194,15 +199,17 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
         -> not important for now, but good to know in case something does not add up later
     */
     // float sum = 0;
-    // ofstream g("layer_1_output_after.out");
+    // ofstream g("layer_1_par1.out");
     // for(int b=0;b<BATCH_SIZE;b++){
     //     sum=0;
     //     for(int i=b*50176;i<(b+1)*50176;i++){
     //         sum += cuda_layer_1_output[i];
     //         g<<cuda_layer_1_output[i]<<" ";  
     //     }
+    //     g<<"\n";
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
+    // cout<<endl;
     return milliseconds;
 }
 
@@ -210,20 +217,27 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
 __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
+    // int h = blockDim.x * blockIdx.x + threadIdx.x;
+    int h = threadIdx.x; // for multiple batches usage
     int w = blockDim.y * blockIdx.y + threadIdx.y;
-    int c = blockDim.z * blockIdx.z + threadIdx.z;
+
+    int c = blockIdx.z; // Neurons index in grid z dir
+
+    int b = blockIdx.x; // Batches index in grid x dir
 
     if(h<14 && w<14){
-        if(c<NR_NEURONS) {
-            d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = lowest;
+        if(b<BATCH_SIZE){
+            if(c<NR_NEURONS) {
+                d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)] = lowest;
+            }
         }
+        
         for (int kH = 0; kH < 2; kH++) {
             for (int kW = 0; kW < 2; kW++) {
-                for(int b = 0; b < BATCH_SIZE; b++){
+                if(b<BATCH_SIZE){
                     if(c<NR_NEURONS) {
-                        d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)]);
-                    }
+                        d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)]);
+                    }                    
                 }
             }
         }
@@ -240,18 +254,18 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     float *d_cuda_layer_2_output; // RESULT storage on device for cuda_layer_2_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_1_output, 50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
-    cudaMalloc((void **) &d_cuda_layer_2_output, 12544*sizeof(float)); // 12544 = 14x14x64 dim of layer_2_output
+    cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
+    cudaMalloc((void **) &d_cuda_layer_2_output, BATCH_SIZE*12544*sizeof(float)); // 12544 = 14x14x64 dim of layer_2_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_1_output, cuda_layer_1_output, (50176*sizeof(float)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_1_output, cuda_layer_1_output, (BATCH_SIZE*50176*sizeof(float)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
 
     // define thread and block sizes
     const int BLKXSIZE = 14;
     const int BLKYSIZE = 14;
-    const int GRIDXSIZE = 1;
+    const int GRIDXSIZE = BATCH_SIZE;
     const int GRIDYSIZE = 1;
     const int GRIDZSIZE = NR_NEURONS;
 
@@ -274,7 +288,7 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     cudaEventRecord(stop);
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_2_output, d_cuda_layer_2_output, (12544*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_2_output, d_cuda_layer_2_output, (BATCH_SIZE*12544*sizeof(float)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -289,10 +303,17 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
 
     // checksum
     // float sum = 0;
-    // for (int i = 0; i < 12544; i++) {
-    //     sum += cuda_layer_2_output[i];
-    //     // cout<<cuda_layer_2_output[i]<<" ";  
+    // ofstream g("layer_2_par1.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*12544;i<(b+1)*12544;i++){
+    //         sum += cuda_layer_2_output[i];
+    //         g<<cuda_layer_2_output[i]<<" ";  
+    //     }
+    //     g<<"\n";
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
+    // cout<<endl;
 
     // all elements (and sum) = 0 (answer is correct at the end) why?
 
@@ -433,24 +454,31 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
+    int h = threadIdx.x;
     int w = blockDim.y * blockIdx.y + threadIdx.y;
-    int m = blockDim.z * blockIdx.z + threadIdx.z;
+    int m = blockIdx.z;
+
+    int b = blockIdx.x;
 
     if(h<14 && w<14){
-        if(m<NR_NEURONS) {
-            // original code always equals to 0, because the biases are float and output is signed short (?)
-            d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] = d_layer_4_bias[m]; // = 0;
+        if(b<BATCH_SIZE){
+            if(m<NR_NEURONS) {
+                // original code always equals to 0, because the biases are float and output is signed short (?)
+                d_cuda_layer_4_output[index4D_cuda(b,h,w,m,14,14,64)] = d_layer_4_bias[m]; // = 0;
+            }
         }
+        
         for (int kH = 0; kH < 3; kH++) {
         int iH = h * 1 + kH - 1;
         if (iH >= 0 && iH < 14) {
             for (int kW = 0; kW < 3; kW++) {
             int iW = w * 1 + kW - 1;
             if (iW >= 0 && iW < 14) {
-                if(m<NR_NEURONS) {
-                    for (int c = 0; c < 1; c++) {
-                        d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index3D_cuda(iH,iW,c,14,64)])) - 64;
+                if(b<BATCH_SIZE){
+                    if(m<NR_NEURONS) {
+                        for (int c = 0; c < 1; c++) {
+                            d_cuda_layer_4_output[index4D_cuda(b,h,w,m,14,14,64)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index4D_cuda(b,iH,iW,c,14,14,64)])) - 64;
+                        }
                     }
                 }
             }
@@ -473,14 +501,14 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     signed short *d_cuda_layer_4_output; // RESULT storage on device for cuda_layer_4_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_3_output, 12544*sizeof(unsigned long long)); // 196=14x14 dim of cuda_layer_4_output
+    cudaMalloc((void **) &d_cuda_layer_3_output, BATCH_SIZE*12544*sizeof(unsigned long long)); // 196=14x14 dim of cuda_layer_4_output
     cudaMalloc((void **) &d_layer_4_bias, 64*sizeof(float)); // 64 = dim of layer_4_bias
     cudaMalloc((void **) &d_cuda_layer_4_weight, 36864*sizeof(unsigned long long)); // 576 = 3x3x64x[1x64] dim of layer_4_weight [ULL]
-    cudaMalloc((void **) &d_cuda_layer_4_output, 12544*sizeof(signed short)); // 12544 = 14x14x64 dim of layer_4_output
+    cudaMalloc((void **) &d_cuda_layer_4_output, BATCH_SIZE*12544*sizeof(signed short)); // 12544 = 14x14x64 dim of layer_4_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_3_output, cuda_layer_3_output, (12544*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_3_output, cuda_layer_3_output, (BATCH_SIZE*12544*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_4_bias, layer_4_bias, (64*sizeof(float)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cuda_layer_4_weight, cuda_layer_4_weight, (36864*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
@@ -488,7 +516,7 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     // define thread and block sizes
     const int BLKXSIZE = 14;
     const int BLKYSIZE = 14;
-    const int GRIDXSIZE = 1;
+    const int GRIDXSIZE = BATCH_SIZE;
     const int GRIDYSIZE = 1;
     const int GRIDZSIZE = NR_NEURONS;
 
@@ -508,7 +536,7 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     cudaCheckErrors("Kernel launch failure");
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (12544*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (BATCH_SIZE*12544*sizeof(signed short)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -524,11 +552,18 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     cudaCheckErrors("cudaFree fail");
 
     // checksum
-    // int sum = 0;
-    // for (int i = 0; i < 12544; i++) {
-    //     sum += cuda_layer_4_output[i];
-    //     // cout<<cuda_layer_4_output[i]<<" ";   
+    // float sum = 0;
+    // ofstream g("layer_4_par1.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*12544;i<(b+1)*12544;i++){
+    //         sum += cuda_layer_4_output[i];
+    //         g<<cuda_layer_4_output[i]<<" ";  
+    //     }
+    //     g<<"\n";
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
+    // cout<<endl;
 
     return milliseconds;
 }
@@ -536,20 +571,27 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
 // Layer 5 - Maxpool
 __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, signed short * d_cuda_layer_5_output, signed short lowest){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
+    int h = threadIdx.x;
     int w = blockDim.y * blockIdx.y + threadIdx.y;
-    int c = blockDim.z * blockIdx.z + threadIdx.z;
+    int c = blockIdx.z;
+
+    int b = blockIdx.x;
 
     if(h<7 && w<7){
-        if(c<NR_NEURONS) {
-            d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)] = lowest;
+        if(b<BATCH_SIZE){
+            if(c<NR_NEURONS) {
+                d_cuda_layer_5_output[index4D_cuda(b,h,w,c,7,7,64)] = lowest;
+            }
         }
+
         for (int kH = 0; kH < 2; kH++) {
             for (int kW = 0; kW < 2; kW++) {
-                if(c<NR_NEURONS) {
-                    d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)] = 
-                    (d_cuda_layer_4_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,14,64)] >= d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)]) ? 
-                    d_cuda_layer_4_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,14,64)] : d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)];
+                if(b<BATCH_SIZE){
+                    if(c<NR_NEURONS) {
+                        d_cuda_layer_5_output[index4D_cuda(b,h,w,c,7,7,64)] = 
+                        (d_cuda_layer_4_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,14,14,64)] >= d_cuda_layer_5_output[index4D_cuda(b,h,w,c,7,7,64)]) ? 
+                        d_cuda_layer_4_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,14,14,64)] : d_cuda_layer_5_output[index4D_cuda(b,h,w,c,7,7,64)];
+                    }
                 }
             }
         }
@@ -566,18 +608,18 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     signed short *d_cuda_layer_5_output; // RESULT storage on device for cuda_layer_5_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_4_output, 12544*sizeof(signed short)); // 12544 = 14x14xx64 dim of layer_4_output
-    cudaMalloc((void **) &d_cuda_layer_5_output, 3136*sizeof(signed short)); // 3136 = 7x7x64 dim of layer_5_output
+    cudaMalloc((void **) &d_cuda_layer_4_output, BATCH_SIZE*12544*sizeof(signed short)); // 12544 = 14x14xx64 dim of layer_4_output
+    cudaMalloc((void **) &d_cuda_layer_5_output, BATCH_SIZE*3136*sizeof(signed short)); // 3136 = 7x7x64 dim of layer_5_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_4_output, cuda_layer_4_output, (12544*sizeof(signed short)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_4_output, cuda_layer_4_output, (BATCH_SIZE*12544*sizeof(signed short)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
 
     // define thread and block sizes
     const int BLKXSIZE = 7;
     const int BLKYSIZE = 7;
-    const int GRIDXSIZE = 1;
+    const int GRIDXSIZE = BATCH_SIZE;
     const int GRIDYSIZE = 1;
     const int GRIDZSIZE = NR_NEURONS;
 
@@ -600,7 +642,7 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     cudaCheckErrors("Kernel launch failure");
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_5_output, d_cuda_layer_5_output, (3136*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_5_output, d_cuda_layer_5_output, (BATCH_SIZE*3136*sizeof(signed short)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -614,11 +656,18 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     cudaCheckErrors("cudaFree fail");
 
     // checksum
-    // int sum = 0;
-    // for (int i = 0; i < 3136; i++) {
-    //     sum += cuda_layer_5_output[i];
-    //     // cout<<cuda_layer_2_output[i]<<" ";  
+    // float sum = 0;
+    // ofstream g("layer_5_par1.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*3136;i<(b+1)*3136;i++){
+    //         sum += cuda_layer_5_output[i];
+    //         g<<cuda_layer_5_output[i]<<" ";  
+    //     }
+    //     g<<"\n";
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
+    // cout<<endl;
     return milliseconds;
 }
 
@@ -628,14 +677,19 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
 // Layer 8 - Gemm
 __global__ void layer8_gemm_kernel(unsigned long long *d_cuda_layer_7_output, float *d_layer_8_bias, unsigned long long *d_cuda_layer_8_weight, signed short *d_cuda_layer_8_output){
 
-    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int z = blockDim.x * blockIdx.z + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
-    int d = x*32+y;
+
+    int d = z*blockDim.x+y;
+
+    int b = blockIdx.x;
 
     if(d < 2048){
-        d_cuda_layer_8_output[d] = d_layer_8_bias[d];
-        for (int i = 0; i < 49; i++) {
-            d_cuda_layer_8_output[d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[i])) - 64;
+        if(b < BATCH_SIZE){
+            d_cuda_layer_8_output[b*2048 + d] = d_layer_8_bias[d];
+            for (int i = 0; i < 49; i++) {
+                d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[i])) - 64;
+            }
         }
     }
 }
@@ -653,14 +707,14 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     signed short *d_cuda_layer_8_output; // RESULT storage on device for cuda_layer_8_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_7_output, 49*sizeof(unsigned long long)); // 49=7x7 dim of cuda_layer_7_output
+    cudaMalloc((void **) &d_cuda_layer_7_output, BATCH_SIZE*49*sizeof(unsigned long long)); // 49=7x7 dim of cuda_layer_7_output
     cudaMalloc((void **) &d_layer_8_bias, 2048*sizeof(float)); // 2048 = dim of layer_8_bias
     cudaMalloc((void **) &d_cuda_layer_8_weight, 100352*sizeof(unsigned long long)); // 100352 = 2048x49 dim of layer_8_weight [ULL]
-    cudaMalloc((void **) &d_cuda_layer_8_output, 2048*sizeof(signed short)); // 2048 = dim of layer_8_output
+    cudaMalloc((void **) &d_cuda_layer_8_output, BATCH_SIZE*2048*sizeof(signed short)); // 2048 = dim of layer_8_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_7_output, cuda_layer_7_output, (49*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_7_output, cuda_layer_7_output, (BATCH_SIZE*49*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_8_bias, layer_8_bias, (2048*sizeof(float)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cuda_layer_8_weight, cuda_layer_8_weight, (100352*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
@@ -668,11 +722,12 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     // define thread and block sizes
     const int BLKXSIZE = 32;
     const int BLKYSIZE = 32;
-    const int GRIDXSIZE = 2;
+    const int GRIDXSIZE = BATCH_SIZE;
     const int GRIDYSIZE = 1;
+    const int GRIDZSIZE = 2;
 
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // 1 for loop 2048 iterations
-    const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
+    const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
 
     // timing of the kernel
     cudaEvent_t start, stop;
@@ -687,7 +742,7 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     cudaCheckErrors("Kernel launch failure");
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_8_output, d_cuda_layer_8_output, (2048*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_8_output, d_cuda_layer_8_output, (BATCH_SIZE*2048*sizeof(signed short)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -703,23 +758,34 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     cudaCheckErrors("cudaFree fail");
 
     // checksum
-    // int sum = 0;
-    // for (int i = 0; i < 2048; i++) {
-    //     sum += cuda_layer_8_output[i];
-    //     // cout<<cuda_layer_4_output[i]<<" ";   
+    // float sum = 0;
+    // ofstream g("layer_8_par1.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*2048;i<(b+1)*2048;i++){
+    //         sum += cuda_layer_8_output[i];
+    //         g<<cuda_layer_8_output[i]<<" ";  
+    //     }
+    //     g<<"\n";
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
+    // cout<<endl;
     return milliseconds;
 }
 
 // Layer 10 - Gemm
 __global__ void layer10_gemm_kernel(unsigned long long *d_cuda_layer_9_output, float *d_layer_10_bias, unsigned long long *d_cuda_layer_10_weight, signed short *d_cuda_layer_10_output){
 
-    int d = blockDim.x * blockIdx.x + threadIdx.x;
+    int d = threadIdx.x;
+
+    int b = blockIdx.x;
 
     if(d < 10){
-        d_cuda_layer_10_output[d] = d_layer_10_bias[d];
-        for (int i = 0; i < 32; i++) {
-            d_cuda_layer_10_output[d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_10_weight[d*32+i] ^ d_cuda_layer_9_output[i])) - 64;
+        if(b<BATCH_SIZE){
+            d_cuda_layer_10_output[b*10 + d] = d_layer_10_bias[d];
+            for (int i = 0; i < 32; i++) {
+                d_cuda_layer_10_output[b*10 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_10_weight[d*32+i] ^ d_cuda_layer_9_output[i])) - 64;
+            }
         }
     }
 }
@@ -737,14 +803,14 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     signed short *d_cuda_layer_10_output; // RESULT storage on device for cuda_layer_10_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_9_output, 32*sizeof(unsigned long long)); // 32 = dim of cuda_layer_9_output
+    cudaMalloc((void **) &d_cuda_layer_9_output, BATCH_SIZE*32*sizeof(unsigned long long)); // 32 = dim of cuda_layer_9_output
     cudaMalloc((void **) &d_layer_10_bias, 10*sizeof(float)); // 10 = dim of layer_10_bias
     cudaMalloc((void **) &d_cuda_layer_10_weight, 320*sizeof(unsigned long long)); // 320 = 32x10 dim of layer_10_weight [ULL]
-    cudaMalloc((void **) &d_cuda_layer_10_output, 10*sizeof(signed short)); // 10 = dim of layer_10_output
+    cudaMalloc((void **) &d_cuda_layer_10_output, BATCH_SIZE*10*sizeof(signed short)); // 10 = dim of layer_10_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_9_output, cuda_layer_9_output, (32*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_9_output, cuda_layer_9_output, (BATCH_SIZE*32*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_10_bias, layer_10_bias, (10*sizeof(float)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cuda_layer_10_weight, cuda_layer_10_weight, (320*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
@@ -752,7 +818,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     // define thread and block sizes
     const int BLKXSIZE = 10;
     const int BLKYSIZE = 1;
-    const int GRIDXSIZE = 1;
+    const int GRIDXSIZE = BATCH_SIZE;
     const int GRIDYSIZE = 1;
 
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // 1 for loop 10 iterations
@@ -771,7 +837,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     cudaCheckErrors("Kernel launch failure");
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_10_output, d_cuda_layer_10_output, (10*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_10_output, d_cuda_layer_10_output, (BATCH_SIZE*10*sizeof(signed short)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -787,11 +853,18 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     cudaCheckErrors("cudaFree fail");
 
     // checksum
-    // int sum = 0;
-    // for (int i = 0; i < 10; i++) {
-    //     sum += cuda_layer_10_output[i];
-    //     // cout<<cuda_layer_4_output[i]<<" ";   
-    // }
+    float sum = 0;
+    ofstream g("layer_10_par1.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*10;i<(b+1)*10;i++){
+            sum += cuda_layer_10_output[i];
+            g<<cuda_layer_10_output[i]<<" ";  
+        }
+        g<<"\n";
+        // cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
+    g<<endl;
     return milliseconds;
 }
 

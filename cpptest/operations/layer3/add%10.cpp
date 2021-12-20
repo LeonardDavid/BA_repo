@@ -12,8 +12,8 @@ using namespace std;
 int main(){
     ifstream f("numbers.txt");
     int count = 0;
-    int sum = 0;
-    unsigned long long a;
+    double sum = 0;
+    double a;
     while(!f.eof()){
         f>>a;
         sum += a; 

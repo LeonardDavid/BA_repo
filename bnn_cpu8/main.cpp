@@ -37,7 +37,7 @@ auto benchmark(MNISTLoader &loader, bool verbose = false) {
             - replace loader.images(i) with loader.images(0)
             - replace loader.labels(i) with loader.labels(0)
     */
-    for (unsigned int i = 0; i < 1; i+=factor) { // i < loader.size()
+    for (unsigned int i = 0; i < loader.size(); i+=factor) { // i < loader.size()
         std::fill(output, output+10, 0);
 
         unsigned char * const  img = loader.images(i);
@@ -62,13 +62,11 @@ auto benchmark(MNISTLoader &loader, bool verbose = false) {
         float max = output[0];
         int argmax = 0;
         for (int j = 0; j < 10; j++) {
-            std::cout<<"label: "<<label<<" out: "<<output[j]<<" ";
             if (output[j] > max) {
                 max = output[j];
                 argmax = j;
             }
         }
-        std::cout<<std::endl;
 
         if (argmax == label) {
             matches++;

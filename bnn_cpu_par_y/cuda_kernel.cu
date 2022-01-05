@@ -71,58 +71,77 @@ using namespace std;
 
 __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *d_layer_1_bias, signed char *d_cuda_layer_1_weight, float *d_cuda_layer_1_output){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
-    int w = blockDim.y * blockIdx.x + threadIdx.y;
+    int h = threadIdx.x; // [0,27]
+    int w = blockDim.y * blockIdx.x + threadIdx.y; // = 28 * 0 + [0,27]
 
-    int y = blockIdx.y;
+    int y = blockIdx.y; // [0,676] / [0,8]
 
     // __syncthreads(); useful?
-    
-    if(y<676){
-        // if (h<28 && w<28){
-            // printf("y: %d, h: %d, w: %d\n", y,h,w);
-            if((y/26)<=h && h<=(y/26)+2 && (y%26)<=w && w<=(y%26)+2){
-                printf("y: %d, h: %d, w: %d\n", y,h,w);
-                for(int b=0;b<BATCH_SIZE;b++){
-                    for (int m = 0; m < 64; m++) {
-                        d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
-                    }
-                }
 
-                if(h!=0 && h!=27 && w!=0 && w!=27){ // not edge pixel
-                    // printf("y: %d, h: %d, w: %d\n", y,h,w);
+    // // if (h<28 && w<28){
+    // if(y<676){
+    //     // if (h<28 && w<28){
+    //         // printf("y: %d, h: %d, w: %d\n", y,h,w);
+    //         if((y/26)<=h && h<=(y/26)+2 && (y%26)<=w && w<=(y%26)+2){
+    //             printf("y: %d, h: %d, w: %d\n", y,h,w);
+    //             for(int b=0;b<BATCH_SIZE;b++){
+    //                 for (int m = 0; m < 64; m++) {
+    //                     d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
+    //                 }
+    //             }
+    //             // __syncthreads();
+    //             if(h!=0 && h!=27 && w!=0 && w!=27){ // not edge pixel
+    //                 // printf("y: %d, h: %d, w: %d\n", y,h,w);
+    //                 for(int b=0;b<BATCH_SIZE;b++){
+    //                     for (int c = 0; c < 1; c++) {
+    //                         for (int m = 0; m < 64; m++) {
+                                
+    //                             int kH = h-(y/26); // scale to [0..2] emulating the 3x3 kernel
+    //                             int iH = h;
+    //                             int kW = w-(y%26); // scale to [0..2] emulating the 3x3 kernel
+    //                             int iW = w;
+    //                             d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+                                
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     // }
+    // }
+    
+
+    if (h<28 && w<28){
+        if(y<9){
+            int khkw = y+(y/3);
+            int kH = khkw >> 2;
+            int kW = khkw & 3;
+            // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kh,kw,khkw);
+        for(int b=0;b<BATCH_SIZE;b++){
+            for (int m = 0; m < 64; m++) {
+                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
+            }
+        }
+        // for (int kH = 0; kH < 3; kH++) {
+            int iH = h * 1 + kH - 1;
+            if (iH >= 0 && iH < 28) {
+                // for (int kW = 0; kW < 3; kW++) {
+                int iW = w * 1 + kW - 1;
+                if (iW >= 0 && iW < 28) {
                     for(int b=0;b<BATCH_SIZE;b++){
                         for (int c = 0; c < 1; c++) {
                             for (int m = 0; m < 64; m++) {
-                                int kH = h-(y/26); // scale to [0..2] emulating the 3x3 kernel
-                                int iH = h;
-                                int kW = w-(y%26); // scale to [0..2] emulating the 3x3 kernel
-                                int iW = w;
-                                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+                                float tmp = d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)];
+                                __syncthreads();
+                                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = tmp + d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
                             }
                         }
                     }
                 }
+                // }
             }
-            
-            // for (int kH = 0; kH < 3; kH++) {
-            // int iH = h * 1 + kH - 1;
-            // if (iH >= 0 && iH < 28) {
-            //     for (int kW = 0; kW < 3; kW++) {
-            //     int iW = w * 1 + kW - 1;
-            //     if (iW >= 0 && iW < 28) {
-            //         for(int b=0;b<BATCH_SIZE;b++){
-            //             for (int c = 0; c < 1; c++) {
-            //                 for (int m = 0; m < 64; m++) {
-            //                     d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
-            //                 }
-            //             }
-            //         }
-            //     }
-            //     }
-            // }
-            // }
         // }
+        }
     }
 }
 
@@ -173,7 +192,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     const int BLKXSIZE = 28;
     const int BLKYSIZE = 28;
     const int GRIDXSIZE = BATCH_SIZE;
-    const int GRIDYSIZE = 676;
+    const int GRIDYSIZE = 9;
     
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 28 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
@@ -218,7 +237,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
         -> not important for now, but good to know in case something does not add up later
     */
     float sum = 0;
-    ofstream g("layer_1_par2.out");
+    ofstream g("layer_1_par.out");
     for(int b=0;b<BATCH_SIZE;b++){
         sum=0;
         for(int i=b*50176;i<(b+1)*50176;i++){

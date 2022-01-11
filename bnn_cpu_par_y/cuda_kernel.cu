@@ -76,14 +76,47 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
 
     int y = blockIdx.y; // [0,676] / [0,8]
 
-    // __syncthreads(); useful?
+    // Approach 1: every element of the 3x3 kernel convoluted in parallel with atomicAdd to avoid race conditions
+    if(y<9){
+        int khkw = y+(y/3);
+        int kH = khkw >> 2;
+        int kW = khkw & 3;
+        // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kh,kw,khkw);
 
+        if (h<28 && w<28){
+            for(int b=0;b<BATCH_SIZE;b++){
+                for (int m = 0; m < 64; m++) {
+                    d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
+                }
+            }
+            // for (int kH = 0; kH < 3; kH++) {
+                int iH = h * 1 + kH - 1;
+                if (iH >= 0 && iH < 28) {
+                    // for (int kW = 0; kW < 3; kW++) {
+                    int iW = w * 1 + kW - 1;
+                    if (iW >= 0 && iW < 28) {
+                        for(int b=0;b<BATCH_SIZE;b++){
+                            for (int c = 0; c < 1; c++) {
+                                for (int m = 0; m < 64; m++) {
+                                    atomicAdd(&d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)], d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)]);
+                                }
+                            }
+                        }
+                    }
+                    // }
+                }
+            // }
+        }
+    }
+
+    // __syncthreads(); useful?
+    // Approach 2: multiple thread blocks per small kernel (bad)
     // // if (h<28 && w<28){
     // if(y<676){
     //     // if (h<28 && w<28){
     //         // printf("y: %d, h: %d, w: %d\n", y,h,w);
     //         if((y/26)<=h && h<=(y/26)+2 && (y%26)<=w && w<=(y%26)+2){
-    //             printf("y: %d, h: %d, w: %d\n", y,h,w);
+    //             // printf("y: %d, h: %d, w: %d\n", y,h,w);
     //             for(int b=0;b<BATCH_SIZE;b++){
     //                 for (int m = 0; m < 64; m++) {
     //                     d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
@@ -100,8 +133,9 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     //                             int iH = h;
     //                             int kW = w-(y%26); // scale to [0..2] emulating the 3x3 kernel
     //                             int iW = w;
-    //                             d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
-                                
+    //                             // d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+    //                             float tmp = d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+    //                             atomicAdd(&d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)],tmp);
     //                         }
     //                     }
     //                 }
@@ -110,39 +144,6 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     //     // }
     // }
     
-
-    if (h<28 && w<28){
-        if(y<9){
-            int khkw = y+(y/3);
-            int kH = khkw >> 2;
-            int kW = khkw & 3;
-            // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kh,kw,khkw);
-        for(int b=0;b<BATCH_SIZE;b++){
-            for (int m = 0; m < 64; m++) {
-                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
-            }
-        }
-        // for (int kH = 0; kH < 3; kH++) {
-            int iH = h * 1 + kH - 1;
-            if (iH >= 0 && iH < 28) {
-                // for (int kW = 0; kW < 3; kW++) {
-                int iW = w * 1 + kW - 1;
-                if (iW >= 0 && iW < 28) {
-                    for(int b=0;b<BATCH_SIZE;b++){
-                        for (int c = 0; c < 1; c++) {
-                            for (int m = 0; m < 64; m++) {
-                                float tmp = d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)];
-                                __syncthreads();
-                                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = tmp + d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
-                            }
-                        }
-                    }
-                }
-                // }
-            }
-        // }
-        }
-    }
 }
 
 float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
@@ -192,7 +193,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     const int BLKXSIZE = 28;
     const int BLKYSIZE = 28;
     const int GRIDXSIZE = BATCH_SIZE;
-    const int GRIDYSIZE = 9;
+    const int GRIDYSIZE = 676; // 9
     
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 28 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
@@ -236,16 +237,16 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
         the outputs appear to be the same as the original implementation (including the sum)
         -> not important for now, but good to know in case something does not add up later
     */
-    float sum = 0;
-    ofstream g("layer_1_par.out");
-    for(int b=0;b<BATCH_SIZE;b++){
-        sum=0;
-        for(int i=b*50176;i<(b+1)*50176;i++){
-            sum += cuda_layer_1_output[i];
-            g<<cuda_layer_1_output[i]<<" ";  
-        }
-        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    }
+    // float sum = 0;
+    // ofstream g("layer_1_par.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*50176;i<(b+1)*50176;i++){
+    //         sum += cuda_layer_1_output[i];
+    //         g<<cuda_layer_1_output[i]<<" ";  
+    //     }
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    // }
     return milliseconds;
 }
 
@@ -253,23 +254,52 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
 __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
-    int w = blockDim.y * blockIdx.y + threadIdx.y;
+    int h = threadIdx.x; // [0,13]
+    int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
 
-    if(h<14 && w<14){
-        for (int c = 0; c < 64; c++) {
-            d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = lowest;
-        }
-        for (int kH = 0; kH < 2; kH++) {
-            for (int kW = 0; kW < 2; kW++) {
-                for(int b = 0; b < BATCH_SIZE; b++){
-                    for (int c = 0; c < 64; c++) {
-                        d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)]);
-                    }
-                }
+    int y = blockIdx.y; // [0,3]
+
+    // Approach 1: every element of the 3x3 kernel convoluted in parallel with atomicAdd to avoid race conditions
+    if(y<4){
+        // int khkw = y;
+        int kH = y >> 1;
+        int kW = y & 1;
+        // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kH,kW,khkw);
+
+        if(h<14 && w<14){
+            for (int c = 0; c < 64; c++) {
+                d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = lowest;
             }
+            // for (int kH = 0; kH < 2; kH++) {
+                // for (int kW = 0; kW < 2; kW++) {
+                    for(int b = 0; b < BATCH_SIZE; b++){
+                        for (int c = 0; c < 64; c++) {
+                            // d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)]);
+                            atomicMax(&d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)], d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)]);
+                        }
+                    }
+                // }
+            // }
         }
     }
+
+    // int h = blockDim.x * blockIdx.x + threadIdx.x;
+    // int w = blockDim.y * blockIdx.y + threadIdx.y;
+
+    // if(h<14 && w<14){
+    //     for (int c = 0; c < 64; c++) {
+    //         d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = lowest;
+    //     }
+    //     for (int kH = 0; kH < 2; kH++) {
+    //         for (int kW = 0; kW < 2; kW++) {
+    //             for(int b = 0; b < BATCH_SIZE; b++){
+    //                 for (int c = 0; c < 64; c++) {
+    //                     d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)]);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_output){
@@ -294,7 +324,7 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     const int BLKXSIZE = 14;
     const int BLKYSIZE = 14;
     const int GRIDXSIZE = 1;
-    const int GRIDYSIZE = 1;
+    const int GRIDYSIZE = 4;
 
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 foor loops 14 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
@@ -330,13 +360,15 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
 
     // checksum
     // float sum = 0;
-    // for (int i = 0; i < 12544; i++) {
-    //     sum += cuda_layer_2_output[i];
-    //     // cout<<cuda_layer_2_output[i]<<" ";  
+    // ofstream g("layer_2_par.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*12544;i<(b+1)*12544;i++){
+    //         sum += cuda_layer_2_output[i];
+    //         g<<cuda_layer_2_output[i]<<" ";  
+    //     }
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
-
-    // all elements (and sum) = 0 (answer is correct at the end) why?
-
     return milliseconds;
 }
 
@@ -474,30 +506,65 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
-    int w = blockDim.y * blockIdx.y + threadIdx.y;
+    int h = threadIdx.x; // [0,13]
+    int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
 
-    if(h<14 && w<14){
-        for (int m = 0; m < 64; m++) {
-            // original code always equals to 0, because the biases are float and output is signed short (?)
-            d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] = d_layer_4_bias[m]; // = 0;
-        }
-        for (int kH = 0; kH < 3; kH++) {
-        int iH = h * 1 + kH - 1;
-        if (iH >= 0 && iH < 14) {
-            for (int kW = 0; kW < 3; kW++) {
-            int iW = w * 1 + kW - 1;
-            if (iW >= 0 && iW < 14) {
-                for (int m = 0; m < 64; m++) {
-                    for (int c = 0; c < 1; c++) {
-                        d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index3D_cuda(iH,iW,c,14,64)])) - 64;
+    int y = blockIdx.y; //[0,8]
+
+    // Approach 1: every element of the 3x3 kernel convoluted in parallel with atomicAdd to avoid race conditions
+    if(y<9){
+        int khkw = y+(y/3);
+        int kH = khkw >> 2;
+        int kW = khkw & 3;
+        // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kh,kw,khkw);
+
+        if(h<14 && w<14){
+            for (int m = 0; m < 64; m++) {
+                // original code always equals to 0, because the biases are float and output is signed short (?)
+                d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] = d_layer_4_bias[m]; // = 0;
+            }
+            // for (int kH = 0; kH < 3; kH++) {
+                int iH = h * 1 + kH - 1;
+                if (iH >= 0 && iH < 14) {
+                    // for (int kW = 0; kW < 3; kW++) {
+                    int iW = w * 1 + kW - 1;
+                    if (iW >= 0 && iW < 14) {
+                        for (int m = 0; m < 64; m++) {
+                            for (int c = 0; c < 1; c++) {
+                                atomicAddShort(&d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)], 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index3D_cuda(iH,iW,c,14,64)])) - 64);
+                            }
+                        }
                     }
+                    // }
                 }
-            }
-            }
-        }
+            // }
         }
     }
+
+    // int h = blockDim.x * blockIdx.x + threadIdx.x;
+    // int w = blockDim.y * blockIdx.y + threadIdx.y;
+
+    // if(h<14 && w<14){
+    //     for (int m = 0; m < 64; m++) {
+    //         // original code always equals to 0, because the biases are float and output is signed short (?)
+    //         d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] = d_layer_4_bias[m]; // = 0;
+    //     }
+    //     for (int kH = 0; kH < 3; kH++) {
+    //     int iH = h * 1 + kH - 1;
+    //     if (iH >= 0 && iH < 14) {
+    //         for (int kW = 0; kW < 3; kW++) {
+    //         int iW = w * 1 + kW - 1;
+    //         if (iW >= 0 && iW < 14) {
+    //             for (int m = 0; m < 64; m++) {
+    //                 for (int c = 0; c < 1; c++) {
+    //                     d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index3D_cuda(iH,iW,c,14,64)])) - 64;
+    //                 }
+    //             }
+    //         }
+    //         }
+    //     }
+    //     }
+    // }
 }
 
 float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * cuda_layer_4_output){
@@ -529,7 +596,7 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     const int BLKXSIZE = 14;
     const int BLKYSIZE = 14;
     const int GRIDXSIZE = 1;
-    const int GRIDYSIZE = 1;
+    const int GRIDYSIZE = 9;
 
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 14 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
@@ -563,10 +630,15 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     cudaCheckErrors("cudaFree fail");
 
     // checksum
-    // int sum = 0;
-    // for (int i = 0; i < 12544; i++) {
-    //     sum += cuda_layer_4_output[i];
-    //     // cout<<cuda_layer_4_output[i]<<" ";   
+    // float sum = 0;
+    // ofstream g("layer_4_par.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*12544;i<(b+1)*12544;i++){
+    //         sum += cuda_layer_4_output[i];
+    //         g<<cuda_layer_4_output[i]<<" ";  
+    //     }
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
 
     return milliseconds;
@@ -574,6 +646,38 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
 
 // Layer 5 - Maxpool
 __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, signed short * d_cuda_layer_5_output, signed short lowest){
+
+    /*
+        short atomicMax does not exist, use normal implementation for Layer 5
+    */
+    // int h = threadIdx.x; // [0,13]
+    // int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
+
+    // int y = blockIdx.y; // [0,3]
+
+    // // Approach 1: every element of the 3x3 kernel convoluted in parallel with atomicAdd to avoid race conditions
+    // if(y<4){
+    //     // int khkw = y;
+    //     int kH = y >> 1;
+    //     int kW = y & 1;
+    //     // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kH,kW,khkw);
+
+    //     if(h<7 && w<7){
+    //         for (int c = 0; c < 64; c++) {
+    //             d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)] = lowest;
+    //         }
+    //         // for (int kH = 0; kH < 2; kH++) {
+    //             // for (int kW = 0; kW < 2; kW++) {
+    //                 for (int c = 0; c < 64; c++) {
+    //                     // atomicMaxShort(&d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)], d_cuda_layer_4_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,14,64)]);
+    //                     d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)] = 
+    //                     (d_cuda_layer_4_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,14,64)] >= d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)]) ? 
+    //                     d_cuda_layer_4_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,14,64)] : d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)];
+    //                 }
+    //             // }
+    //         // }
+    //     }
+    // }
 
     int h = blockDim.x * blockIdx.x + threadIdx.x;
     int w = blockDim.y * blockIdx.y + threadIdx.y;
@@ -651,10 +755,15 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     cudaCheckErrors("cudaFree fail");
 
     // checksum
-    // int sum = 0;
-    // for (int i = 0; i < 3136; i++) {
-    //     sum += cuda_layer_5_output[i];
-    //     // cout<<cuda_layer_2_output[i]<<" ";  
+    // float sum = 0;
+    // ofstream g("layer_5_par.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*3136;i<(b+1)*3136;i++){
+    //         sum += cuda_layer_5_output[i];
+    //         g<<cuda_layer_5_output[i]<<" ";  
+    //     }
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
     return milliseconds;
 }

@@ -1,6 +1,7 @@
 #include "netW.hpp"
 #include "cuda_net.h"
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -12,6 +13,9 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
   kernel_time += layer1_conv(x, cuda_layer_1_output);
   
   kernel_time += layer2_maxpool(cuda_layer_1_output, cuda_layer_2_output);
+  
+  // unsigned long long *cuda_layer_3_output = (unsigned long long *) layer_3_output;
+  // kernel_time += layer3_step(cuda_layer_2_output, cuda_layer_3_output);
 
   /*
       to run without the outputs from line 58-126: 
@@ -35,8 +39,10 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
       for (int c = 0; c < 64; c++) {
         if (cuda_layer_2_output[index3D(h,w,c,14,64)] > layer_3_threshold[c]) {
           layer_3_output[h][w][c / 64] |= (1ULL << (63 - c % 64));
+          // cout<<layer_3_output[h][w][c]<<" ";
         } else {
           layer_3_output[h][w][c / 64] &= ~(1ULL << (63 - c % 64));
+          // cout<<layer_3_output[h][w][c]<<" ";
         }
       }
       // cout<<endl;
@@ -52,6 +58,14 @@ float predict_NeuralNet(unsigned char * const x, float * pred) {
       }
     }
   }
+
+  // float sum = 0;
+  // ofstream g("layer_3_orig.out");
+  // for(int i=0;i<12544;i++){
+  //     sum += cuda_layer_3_output[i]%10;
+  //     g<<cuda_layer_3_output[i]<<" ";  
+  // }
+  // cout<<"sum = "<<sum<<endl;
 
   // the method below for flattening does not lead to the correct result
   // unsigned long long *cuda_layer_3_output = (unsigned long long *) layer_3_output;

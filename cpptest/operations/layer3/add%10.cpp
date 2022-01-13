@@ -12,11 +12,11 @@ using namespace std;
 int main(){
     ifstream f("numbers.txt");
     int count = 0;
-    double sum = 0;
-    double a;
+    unsigned long long sum = 0;
+    unsigned long long a;
     while(!f.eof()){
         f>>a;
-        sum += a; 
+        sum += a%10; 
         count++;
     }
     cout<<fixed<<"elements: "<<count<<endl<<"sum: "<<sum<<endl;

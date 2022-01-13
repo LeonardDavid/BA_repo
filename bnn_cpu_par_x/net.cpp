@@ -30,18 +30,18 @@ float predict_NeuralNet(unsigned char * const x, float * output) {
   */
  
   for(int b=0;b<BATCH_SIZE;b++){
-  for (int h = 0; h < 14; h++) {
-    for (int w = 0; w < 14; w++) {
-        for (int c = 0; c < 64; c++) {
-        if (cuda_layer_2_output[index4D(b,h,w,c,14,14,64)] > layer_3_threshold[c]) {
-          layer_3_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
-        } else {
-          layer_3_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));
+    for (int h = 0; h < 14; h++) {
+      for (int w = 0; w < 14; w++) {
+          for (int c = 0; c < 64; c++) {
+          if (cuda_layer_2_output[index4D(b,h,w,c,14,14,64)] > layer_3_threshold[c]) {
+            layer_3_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
+          } else {
+            layer_3_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));
+          }
+        }
+      // cout<<endl;
         }
       }
-      // cout<<endl;
-      }
-    }
     // cout<<endl;
   }
 

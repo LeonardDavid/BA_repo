@@ -184,18 +184,18 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
         the outputs appear to be the same as the original implementation (including the sum)
         -> not important for now, but good to know in case something does not add up later
     */
-    // float sum = 0;
-    // ofstream g("layer_1_par1.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*50176;i<(b+1)*50176;i++){
-    //         sum += cuda_layer_1_output[i];
-    //         g<<cuda_layer_1_output[i]<<" ";  
-    //     }
-    //     g<<"\n";
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
-    // cout<<endl;
+    float sum = 0;
+    ofstream g("layer_1_par1.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*50176;i<(b+1)*50176;i++){
+            sum += cuda_layer_1_output[i];
+            g<<cuda_layer_1_output[i]<<" ";  
+        }
+        g<<"\n";
+        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
+    cout<<endl;
     return milliseconds;
 }
 
@@ -542,7 +542,6 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     //     g<<"\n";
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
-    // cout<<endl;
 
     return milliseconds;
 }
@@ -839,7 +838,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     //         g<<cuda_layer_10_output[i]<<" ";  
     //     }
     //     g<<"\n";
-    //     // cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
     // g<<endl;
     

@@ -193,7 +193,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     const int BLKXSIZE = 28;
     const int BLKYSIZE = 28;
     const int GRIDXSIZE = BATCH_SIZE;
-    const int GRIDYSIZE = 676; // 9
+    const int GRIDYSIZE = 9; // 9
     
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 28 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);

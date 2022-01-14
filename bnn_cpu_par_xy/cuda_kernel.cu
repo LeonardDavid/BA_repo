@@ -72,7 +72,10 @@ using namespace std;
 __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *d_layer_1_bias, signed char *d_cuda_layer_1_weight, float *d_cuda_layer_1_output){
 
     int h = threadIdx.x; // [0,27]
-    int w = blockDim.y * blockIdx.x + threadIdx.y; // = 28 * 0 + [0,27]
+    int w = threadIdx.y; // [0,27]
+
+    // int h = blockDim.x * blockIdx.x + threadIdx.x;
+    // int w = blockDim.y * blockIdx.x + threadIdx.y;
 
     int b = blockIdx.x; // Batches index on x grid
     int y = blockIdx.y; // [0,676] / [0,8]
@@ -82,6 +85,13 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
         int khkw = y+(y/3);
         int kH = khkw >> 2;
         int kW = khkw & 3;
+        
+        // printf("h: %d, w: %d\n", h, w);
+        // if(b>0){
+        //     h = h - 27;
+        //     w = w - 27;
+        // }
+        
         // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kh,kw,khkw);
 
         if (h<28 && w<28){
@@ -238,17 +248,17 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
         the outputs appear to be the same as the original implementation (including the sum)
         -> not important for now, but good to know in case something does not add up later
     */
-    float sum = 0;
-    ofstream g("layer_1_par.out");
-    for(int b=0;b<BATCH_SIZE;b++){
-        sum=0;
-        for(int i=b*50176;i<(b+1)*50176;i++){
-            sum += cuda_layer_1_output[i];
-            g<<cuda_layer_1_output[i]<<" ";  
-        }
-        g<<"\n";
-        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    }
+    // float sum = 0;
+    // ofstream g("layer_1_par.out");
+    // for(int b=0;b<BATCH_SIZE;b++){
+    //     sum=0;
+    //     for(int i=b*50176;i<(b+1)*50176;i++){
+    //         sum += cuda_layer_1_output[i];
+    //         g<<cuda_layer_1_output[i]<<" ";  
+    //     }
+    //     g<<"\n";
+    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    // }
     return milliseconds;
 }
 
@@ -256,8 +266,11 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
 __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-    int h = threadIdx.x; // [0,13]
-    int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
+    // int h = threadIdx.x; // [0,13]
+    // int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
+
+    int h = threadIdx.x; // [0,27]
+    int w = threadIdx.y; // [0,27]
 
     int b = blockIdx.x; // Batches index in grid x dir
     int y = blockIdx.y; // [0,3]
@@ -317,12 +330,12 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     float *d_cuda_layer_2_output; // RESULT storage on device for cuda_layer_2_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_1_output, 50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
-    cudaMalloc((void **) &d_cuda_layer_2_output, 12544*sizeof(float)); // 12544 = 14x14x64 dim of layer_2_output
+    cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
+    cudaMalloc((void **) &d_cuda_layer_2_output, BATCH_SIZE*12544*sizeof(float)); // 12544 = 14x14x64 dim of layer_2_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_1_output, cuda_layer_1_output, (50176*sizeof(float)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_1_output, cuda_layer_1_output, (BATCH_SIZE*50176*sizeof(float)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
 
     // define thread and block sizes
@@ -350,7 +363,7 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     cudaEventRecord(stop);
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_2_output, d_cuda_layer_2_output, (12544*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_2_output, d_cuda_layer_2_output, (BATCH_SIZE*12544*sizeof(float)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -372,6 +385,7 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     //         sum += cuda_layer_2_output[i];
     //         g<<cuda_layer_2_output[i]<<" ";  
     //     }
+    //     g<<"\n";
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
     return milliseconds;
@@ -511,8 +525,11 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
 
-    int h = threadIdx.x; // [0,13]
-    int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
+    // int h = threadIdx.x; // [0,13]
+    // int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
+
+    int h = threadIdx.x; // [0,27]
+    int w = threadIdx.y; // [0,27]
 
     int b = blockIdx.x;
     int y = blockIdx.y; //[0,8]
@@ -590,14 +607,14 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     signed short *d_cuda_layer_4_output; // RESULT storage on device for cuda_layer_4_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_3_output, 12544*sizeof(unsigned long long)); // 196=14x14 dim of cuda_layer_4_output
+    cudaMalloc((void **) &d_cuda_layer_3_output, BATCH_SIZE*12544*sizeof(unsigned long long)); // 196=14x14 dim of cuda_layer_4_output
     cudaMalloc((void **) &d_layer_4_bias, 64*sizeof(float)); // 64 = dim of layer_4_bias
     cudaMalloc((void **) &d_cuda_layer_4_weight, 36864*sizeof(unsigned long long)); // 576 = 3x3x64x[1x64] dim of layer_4_weight [ULL]
-    cudaMalloc((void **) &d_cuda_layer_4_output, 12544*sizeof(signed short)); // 12544 = 14x14x64 dim of layer_4_output
+    cudaMalloc((void **) &d_cuda_layer_4_output, BATCH_SIZE*12544*sizeof(signed short)); // 12544 = 14x14x64 dim of layer_4_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_3_output, cuda_layer_3_output, (12544*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_3_output, cuda_layer_3_output, (BATCH_SIZE*12544*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_4_bias, layer_4_bias, (64*sizeof(float)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cuda_layer_4_weight, cuda_layer_4_weight, (36864*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
@@ -624,7 +641,7 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     cudaCheckErrors("Kernel launch failure");
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (12544*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (BATCH_SIZE*12544*sizeof(signed short)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -724,12 +741,12 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     signed short *d_cuda_layer_5_output; // RESULT storage on device for cuda_layer_5_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_4_output, 12544*sizeof(signed short)); // 12544 = 14x14xx64 dim of layer_4_output
-    cudaMalloc((void **) &d_cuda_layer_5_output, 3136*sizeof(signed short)); // 3136 = 7x7x64 dim of layer_5_output
+    cudaMalloc((void **) &d_cuda_layer_4_output, BATCH_SIZE*12544*sizeof(signed short)); // 12544 = 14x14xx64 dim of layer_4_output
+    cudaMalloc((void **) &d_cuda_layer_5_output, BATCH_SIZE*3136*sizeof(signed short)); // 3136 = 7x7x64 dim of layer_5_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_4_output, cuda_layer_4_output, (12544*sizeof(signed short)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_4_output, cuda_layer_4_output, (BATCH_SIZE*12544*sizeof(signed short)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
 
     // define thread and block sizes
@@ -757,7 +774,7 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     cudaCheckErrors("Kernel launch failure");
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_5_output, d_cuda_layer_5_output, (3136*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_5_output, d_cuda_layer_5_output, (BATCH_SIZE*3136*sizeof(signed short)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -820,14 +837,14 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     signed short *d_cuda_layer_8_output; // RESULT storage on device for cuda_layer_8_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_7_output, 49*sizeof(unsigned long long)); // 49=7x7 dim of cuda_layer_7_output
+    cudaMalloc((void **) &d_cuda_layer_7_output, BATCH_SIZE*49*sizeof(unsigned long long)); // 49=7x7 dim of cuda_layer_7_output
     cudaMalloc((void **) &d_layer_8_bias, 2048*sizeof(float)); // 2048 = dim of layer_8_bias
     cudaMalloc((void **) &d_cuda_layer_8_weight, 100352*sizeof(unsigned long long)); // 100352 = 2048x49 dim of layer_8_weight [ULL]
-    cudaMalloc((void **) &d_cuda_layer_8_output, 2048*sizeof(signed short)); // 2048 = dim of layer_8_output
+    cudaMalloc((void **) &d_cuda_layer_8_output, BATCH_SIZE*2048*sizeof(signed short)); // 2048 = dim of layer_8_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_7_output, cuda_layer_7_output, (49*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_7_output, cuda_layer_7_output, (BATCH_SIZE*49*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_8_bias, layer_8_bias, (2048*sizeof(float)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cuda_layer_8_weight, cuda_layer_8_weight, (100352*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
@@ -855,7 +872,7 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     cudaCheckErrors("Kernel launch failure");
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_8_output, d_cuda_layer_8_output, (2048*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_8_output, d_cuda_layer_8_output, (BATCH_SIZE*2048*sizeof(signed short)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads
@@ -916,14 +933,14 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     signed short *d_cuda_layer_10_output; // RESULT storage on device for cuda_layer_10_output
 
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_9_output, 32*sizeof(unsigned long long)); // 32 = dim of cuda_layer_9_output
+    cudaMalloc((void **) &d_cuda_layer_9_output, BATCH_SIZE*32*sizeof(unsigned long long)); // 32 = dim of cuda_layer_9_output
     cudaMalloc((void **) &d_layer_10_bias, 10*sizeof(float)); // 10 = dim of layer_10_bias
     cudaMalloc((void **) &d_cuda_layer_10_weight, 320*sizeof(unsigned long long)); // 320 = 32x10 dim of layer_10_weight [ULL]
-    cudaMalloc((void **) &d_cuda_layer_10_output, 10*sizeof(signed short)); // 10 = dim of layer_10_output
+    cudaMalloc((void **) &d_cuda_layer_10_output, BATCH_SIZE*10*sizeof(signed short)); // 10 = dim of layer_10_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_9_output, cuda_layer_9_output, (32*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_9_output, cuda_layer_9_output, (BATCH_SIZE*32*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_10_bias, layer_10_bias, (10*sizeof(float)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cuda_layer_10_weight, cuda_layer_10_weight, (320*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
@@ -950,7 +967,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     cudaCheckErrors("Kernel launch failure");
 
     // copy result from device to host
-    cudaMemcpy(cuda_layer_10_output, d_cuda_layer_10_output, (10*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_10_output, d_cuda_layer_10_output, (BATCH_SIZE*10*sizeof(signed short)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
 
     // synchronize threads

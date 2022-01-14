@@ -86,7 +86,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
             for (int j = 1; j < 10; j++) {
                 if (output[b*10 + j] > max) {
                     max = output[b*10 + j];
-                    argmax = b*10 + j;
+                    argmax = j;
                 }
             }
 
@@ -101,7 +101,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     float accuracy[BATCH_SIZE];
     for(int b = 0; b < BATCH_SIZE; b++){
         accuracy[b] = static_cast<float>(matches[b]) / (lsize/factor) * 100.f;
-        printf("Accuracy batch %d: %.1f%\n", b, accuracy[b]);
+        printf("Accuracy batch %d: %.1f%, Matches: %d/10000\n", b, accuracy[b],matches[b]);
     }
 
     auto total_cpu_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());

@@ -182,12 +182,12 @@ float predict_NeuralNet(unsigned char * const x, float * output) {
       }
     }
   }
-
+  
   unsigned long long *cuda_layer_9_output = (unsigned long long *) layer_9_output;
   
   // worth it for 10 iterations? not really
   kernel_time += layer10_gemm(cuda_layer_9_output, cuda_layer_10_output);
-  
+
   for(int b=0;b<BATCH_SIZE;b++){
     for (int i = 0; i < 10; i++) {
       output[b*10 + i] += cuda_layer_10_output[b*10 + i];

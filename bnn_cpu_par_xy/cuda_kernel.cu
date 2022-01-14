@@ -71,89 +71,62 @@ using namespace std;
 
 __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *d_layer_1_bias, signed char *d_cuda_layer_1_weight, float *d_cuda_layer_1_output){
 
-    int h = threadIdx.x; // [0,27]
-    int w = threadIdx.y; // [0,27]
+    // https://github.com/ULHPC/tutorials/blob/devel/cuda/exercises/convolution/LoG_gpu_solution.cu
 
-    // int h = blockDim.x * blockIdx.x + threadIdx.x;
-    // int w = blockDim.y * blockIdx.x + threadIdx.y;
+    int N = 28, kernel_size = 3;
 
-    int b = blockIdx.x; // Batches index on x grid
-    int y = blockIdx.y; // [0,676] / [0,8]
+    int tid = threadIdx.x; // = h
+    int bid = blockIdx.y;  // = w
+    int h = tid, w = bid;
 
-    // Approach 1: every element of the 3x3 kernel convoluted in parallel with atomicAdd to avoid race conditions
-    if(y<9){
-        int khkw = y+(y/3);
-        int kH = khkw >> 2;
-        int kW = khkw & 3;
-        
-        // printf("h: %d, w: %d\n", h, w);
-        // if(b>0){
-        //     h = h - 27;
-        //     w = w - 27;
-        // }
-        
-        // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kh,kw,khkw);
+    // batches in x-dir
+    int b = blockIdx.x;
+    //each block is assigned to a row of an image, iy index of y value                  
+    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    //each thread is assigned to a pixel of a row, ix index of x value
+    int ix = threadIdx.x + (kernel_size - 1)/2; 
+    
+    //idx global index (all blocks) of the image pixel 
+    int idx = iy*N +ix;                        
+    //total number of kernel elements
+    // int K2 = kernel_size*kernel_size; 
+    // //center of kernel in both dimensions          
+    // int center = (kernel_size - 1)/2;		
+    // //Auxiliary variables
+    // int ii, jj;
 
-        if (h<28 && w<28){
-            if(b<BATCH_SIZE){
-                for (int m = 0; m < 64; m++) {
-                    d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
-                }
+    // bias is applied to every pixel
+    if(tid < N){
+        if(b<BATCH_SIZE){
+            for (int m = 0; m < 64; m++) {
+                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
             }
-            // for (int kH = 0; kH < 3; kH++) {
-                int iH = h * 1 + kH - 1;
-                if (iH >= 0 && iH < 28) {
-                    // for (int kW = 0; kW < 3; kW++) {
+        }
+    }
+
+    __syncthreads();
+
+    // edge pixels are skipped here because they cannot fit entire convolution window
+    if(idx < N*N){
+        for (int kH = 0; kH < kernel_size; kH++){
+            int iH = h * 1 + kH - 1;
+            if (iH >= 0 && iH < 28) {
+                for (int kW = 0; kW < kernel_size; kW++){
                     int iW = w * 1 + kW - 1;
                     if (iW >= 0 && iW < 28) {
                         if(b<BATCH_SIZE){
                             for (int c = 0; c < 1; c++) {
                                 for (int m = 0; m < 64; m++) {
-                                    atomicAdd(&d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)], d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)]);
+                                    // atomicAdd(&d_cuda_layer_1_output[index4D_cuda(b,bid,tid,m,28,28,64)], d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)]);
+                                    d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
                                 }
                             }
                         }
                     }
-                    // }
                 }
-            // }
+            }
         }
     }
-
-    // __syncthreads(); useful?
-    // Approach 2: multiple thread blocks per small kernel (bad)
-    // // if (h<28 && w<28){
-    // if(y<676){
-    //     // if (h<28 && w<28){
-    //         // printf("y: %d, h: %d, w: %d\n", y,h,w);
-    //         if((y/26)<=h && h<=(y/26)+2 && (y%26)<=w && w<=(y%26)+2){
-    //             // printf("y: %d, h: %d, w: %d\n", y,h,w);
-    //             for(int b=0;b<BATCH_SIZE;b++){
-    //                 for (int m = 0; m < 64; m++) {
-    //                     d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
-    //                 }
-    //             }
-    //             // __syncthreads();
-    //             if(h!=0 && h!=27 && w!=0 && w!=27){ // not edge pixel
-    //                 // printf("y: %d, h: %d, w: %d\n", y,h,w);
-    //                 for(int b=0;b<BATCH_SIZE;b++){
-    //                     for (int c = 0; c < 1; c++) {
-    //                         for (int m = 0; m < 64; m++) {
-                                
-    //                             int kH = h-(y/26); // scale to [0..2] emulating the 3x3 kernel
-    //                             int iH = h;
-    //                             int kW = w-(y%26); // scale to [0..2] emulating the 3x3 kernel
-    //                             int iW = w;
-    //                             // d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
-    //                             float tmp = d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
-    //                             atomicAdd(&d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)],tmp);
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     // }
-    // }
     
 }
 
@@ -202,9 +175,9 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     // const int dataysize = 28;
     // const int datamul = dataxsize*dataysize;
     const int BLKXSIZE = 28;
-    const int BLKYSIZE = 28;
+    const int BLKYSIZE = 1;
     const int GRIDXSIZE = BATCH_SIZE;
-    const int GRIDYSIZE = 9; // 9
+    const int GRIDYSIZE = 28; // 9
     
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 28 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
@@ -237,7 +210,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     cudaFree(d_cuda_layer_1_output);
     cudaCheckErrors("cudaFree fail");
     
-    // checksum
+    // checksum L1 = -605468.812500
     /*
         Note: observed small discrepency when calculating the sum in separate program:
         for 1 batch of 50176 elements:
@@ -256,7 +229,6 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     //         sum += cuda_layer_1_output[i];
     //         g<<cuda_layer_1_output[i]<<" ";  
     //     }
-    //     g<<"\n";
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
     return milliseconds;
@@ -266,58 +238,50 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
 __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-    // int h = threadIdx.x; // [0,13]
-    // int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
+    int N = 14, kernel_size = 2;
 
-    int h = threadIdx.x; // [0,27]
-    int w = threadIdx.y; // [0,27]
+    int tid = threadIdx.x; // = h
+    int bid = blockIdx.y;  // = w
+    int h = tid, w = bid;
 
     int b = blockIdx.x; // Batches index in grid x dir
-    int y = blockIdx.y; // [0,3]
+    //each block is assigned to a row of an image, iy index of y value                  
+    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    //each thread is assigned to a pixel of a row, ix index of x value
+    int ix = threadIdx.x + (kernel_size - 1)/2; 
+    
+    //idx global index (all blocks) of the image pixel 
+    int idx = iy*N +ix;                        
+    //total number of kernel elements
+    // int K2 = kernel_size*kernel_size; 
+    // //center of kernel in both dimensions          
+    // int center = (kernel_size - 1)/2;		
+    // //Auxiliary variables
+    // int ii, jj;
 
-    // Approach 1: every element of the 3x3 kernel convoluted in parallel with atomicAdd to avoid race conditions
-    if(y<4){
-        // int khkw = y;
-        int kH = y >> 1;
-        int kW = y & 1;
-        // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kH,kW,khkw);
-
-        if(h<14 && w<14){
-            if(b<BATCH_SIZE){
-                for (int c = 0; c < 64; c++) {
-                    d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)] = lowest;
-                }
+    // bias is applied to every pixel
+    if(tid < N){
+        if(b<BATCH_SIZE){
+            for (int c = 0; c < 64; c++) {
+                d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)] = lowest;
             }
-            // for (int kH = 0; kH < 2; kH++) {
-                // for (int kW = 0; kW < 2; kW++) {
-                    if(b<BATCH_SIZE){
-                        for (int c = 0; c < 64; c++) {
-                            // d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)]);
-                            atomicMax(&d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)], d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)]);
-                        }
-                    }
-                // }
-            // }
         }
     }
 
-    // int h = blockDim.x * blockIdx.x + threadIdx.x;
-    // int w = blockDim.y * blockIdx.y + threadIdx.y;
+    __syncthreads();
 
-    // if(h<14 && w<14){
-    //     for (int c = 0; c < 64; c++) {
-    //         d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = lowest;
-    //     }
-    //     for (int kH = 0; kH < 2; kH++) {
-    //         for (int kW = 0; kW < 2; kW++) {
-    //             for(int b = 0; b < BATCH_SIZE; b++){
-    //                 for (int c = 0; c < 64; c++) {
-    //                     d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index3D_cuda(h,w,c,14,64)]);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    // edge pixels are skipped here because they cannot fit entire convolution window
+    if(idx < N*N){
+        for (int kH = 0; kH<kernel_size; kH++){
+            for (int kW = 0; kW<kernel_size; kW++){
+                if(b<BATCH_SIZE){
+                    for (int c = 0; c < 64; c++) {
+                        d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)]);
+                    }
+                }
+            }
+        }
+    }
 }
 
 float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_output){
@@ -340,9 +304,9 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
 
     // define thread and block sizes
     const int BLKXSIZE = 14;
-    const int BLKYSIZE = 14;
+    const int BLKYSIZE = 1;
     const int GRIDXSIZE = BATCH_SIZE;
-    const int GRIDYSIZE = 4;
+    const int GRIDYSIZE = 14;
 
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 foor loops 14 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
@@ -376,7 +340,7 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     cudaFree(d_cuda_layer_2_output);
     cudaCheckErrors("cudaFree fail");
 
-    // checksum
+    // checksum L2 = 455610.125000
     // float sum = 0;
     // ofstream g("layer_2_par.out");
     // for(int b=0;b<BATCH_SIZE;b++){
@@ -385,7 +349,6 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     //         sum += cuda_layer_2_output[i];
     //         g<<cuda_layer_2_output[i]<<" ";  
     //     }
-    //     g<<"\n";
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
     return milliseconds;
@@ -524,74 +487,60 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
 // Layer 4 - Convolution
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
+    
+    int N = 28, kernel_size = 3;
 
-    // int h = threadIdx.x; // [0,13]
-    // int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
+    int tid = threadIdx.x; // = h
+    int bid = blockIdx.y;  // = w
+    int h = tid, w = bid;
 
-    int h = threadIdx.x; // [0,27]
-    int w = threadIdx.y; // [0,27]
+    int b = blockIdx.x; //batches in x-dir
+    //each block is assigned to a row of an image, iy index of y value                  
+    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    //each thread is assigned to a pixel of a row, ix index of x value
+    int ix = threadIdx.x + (kernel_size - 1)/2; 
+    
+    //idx global index (all blocks) of the image pixel 
+    int idx = iy*N +ix;                        
+    //total number of kernel elements
+    // int K2 = kernel_size*kernel_size; 
+    // //center of kernel in both dimensions          
+    // int center = (kernel_size - 1)/2;		
+    // //Auxiliary variables
+    // int ii, jj;
 
-    int b = blockIdx.x;
-    int y = blockIdx.y; //[0,8]
-
-    // Approach 1: every element of the 3x3 kernel convoluted in parallel with atomicAdd to avoid race conditions
-    if(y<9){
-        int khkw = y+(y/3);
-        int kH = khkw >> 2;
-        int kW = khkw & 3;
-        // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kh,kw,khkw);
-
-        if(h<14 && w<14){
-            if(b<BATCH_SIZE){
-                for (int m = 0; m < 64; m++) {
-                    // original code always equals to 0, because the biases are float and output is signed short (?)
-                    d_cuda_layer_4_output[index4D_cuda(b,h,w,m,14,14,64)] = d_layer_4_bias[m]; // = 0;
-                }
+    // bias is applied to every pixel
+    if(tid < N){
+        if(b<BATCH_SIZE){
+            for (int m = 0; m < 64; m++) {
+                d_cuda_layer_4_output[index4D_cuda(b,h,w,m,14,14,64)] = d_layer_4_bias[m]; // = 0;
             }
-            // for (int kH = 0; kH < 3; kH++) {
-                int iH = h * 1 + kH - 1;
-                if (iH >= 0 && iH < 14) {
-                    // for (int kW = 0; kW < 3; kW++) {
+        }
+    }
+
+    __syncthreads();
+
+    // edge pixels are skipped here because they cannot fit entire convolution window
+    if(idx < N*N){
+        for (int kH = 0; kH<kernel_size; kH++){
+            int iH = h * 1 + kH - 1;
+            if (iH >= 0 && iH < 14) {
+                for (int kW = 0; kW<kernel_size; kW++){
                     int iW = w * 1 + kW - 1;
                     if (iW >= 0 && iW < 14) {
                         if(b<BATCH_SIZE){
                             for (int m = 0; m < 64; m++) {
                                 for (int c = 0; c < 1; c++) {
-                                    atomicAddShort(&d_cuda_layer_4_output[index4D_cuda(b,h,w,m,14,14,64)], 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index4D_cuda(b,iH,iW,c,14,14,64)])) - 64);
+                                    // atomicAddShort(&d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)], 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index3D_cuda(iH,iW,c,14,64)])) - 64);
+                                    d_cuda_layer_4_output[index4D_cuda(b,h,w,m,14,14,64)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index4D_cuda(b,iH,iW,c,14,14,64)])) - 64;
                                 }
                             }
                         }
                     }
-                    // }
                 }
-            // }
+            }
         }
     }
-
-    // int h = blockDim.x * blockIdx.x + threadIdx.x;
-    // int w = blockDim.y * blockIdx.y + threadIdx.y;
-
-    // if(h<14 && w<14){
-    //     for (int m = 0; m < 64; m++) {
-    //         // original code always equals to 0, because the biases are float and output is signed short (?)
-    //         d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] = d_layer_4_bias[m]; // = 0;
-    //     }
-    //     for (int kH = 0; kH < 3; kH++) {
-    //     int iH = h * 1 + kH - 1;
-    //     if (iH >= 0 && iH < 14) {
-    //         for (int kW = 0; kW < 3; kW++) {
-    //         int iW = w * 1 + kW - 1;
-    //         if (iW >= 0 && iW < 14) {
-    //             for (int m = 0; m < 64; m++) {
-    //                 for (int c = 0; c < 1; c++) {
-    //                     d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index3D_cuda(iH,iW,c,14,64)])) - 64;
-    //                 }
-    //             }
-    //         }
-    //         }
-    //     }
-    //     }
-    // }
 }
 
 float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * cuda_layer_4_output){
@@ -621,9 +570,9 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
 
     // define thread and block sizes
     const int BLKXSIZE = 14;
-    const int BLKYSIZE = 14;
+    const int BLKYSIZE = 1;
     const int GRIDXSIZE = BATCH_SIZE;
-    const int GRIDYSIZE = 9;
+    const int GRIDYSIZE = 14;
 
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 14 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
@@ -656,7 +605,7 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     cudaFree(d_cuda_layer_4_output);
     cudaCheckErrors("cudaFree fail");
 
-    // checksum
+    // checksum L4 = 6334.000000
     // float sum = 0;
     // ofstream g("layer_4_par.out");
     // for(int b=0;b<BATCH_SIZE;b++){
@@ -674,53 +623,44 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
 // Layer 5 - Maxpool
 __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, signed short * d_cuda_layer_5_output, signed short lowest){
 
-    /*
-        short atomicMax does not exist, use normal implementation for Layer 5
-    */
-    // int h = threadIdx.x; // [0,13]
-    // int w = blockDim.y * blockIdx.x + threadIdx.y; // = 14 * 0 + [0,13]
+    int N = 7, kernel_size = 2;
 
-    // int y = blockIdx.y; // [0,3]
+    int tid = threadIdx.x; // = h
+    int bid = blockIdx.y;  // = w
+    int h = tid, w = bid;
 
-    // // Approach 1: every element of the 3x3 kernel convoluted in parallel with atomicAdd to avoid race conditions
-    // if(y<4){
-    //     // int khkw = y;
-    //     int kH = y >> 1;
-    //     int kW = y & 1;
-    //     // printf("y: %d, kh: %d, kw: %d, khkw: %d\n", y,kH,kW,khkw);
+    int b = blockIdx.x; // batches in x-dir
+    //each block is assigned to a row of an image, iy index of y value                  
+    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    //each thread is assigned to a pixel of a row, ix index of x value
+    int ix = threadIdx.x + (kernel_size - 1)/2; 
+    
+    //idx global index (all blocks) of the image pixel 
+    int idx = iy*N +ix;                        
+    //total number of kernel elements
+    // int K2 = kernel_size*kernel_size; 
+    // //center of kernel in both dimensions          
+    // int center = (kernel_size - 1)/2;		
+    // //Auxiliary variables
+    // int ii, jj;
 
-    //     if(h<7 && w<7){
-    //         for (int c = 0; c < 64; c++) {
-    //             d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)] = lowest;
-    //         }
-    //         // for (int kH = 0; kH < 2; kH++) {
-    //             // for (int kW = 0; kW < 2; kW++) {
-    //                 for (int c = 0; c < 64; c++) {
-    //                     // atomicMaxShort(&d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)], d_cuda_layer_4_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,14,64)]);
-    //                     d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)] = 
-    //                     (d_cuda_layer_4_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,14,64)] >= d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)]) ? 
-    //                     d_cuda_layer_4_output[index3D_cuda((h * 2 + kH),(w * 2 + kW),c,14,64)] : d_cuda_layer_5_output[index3D_cuda(h,w,c,7,64)];
-    //                 }
-    //             // }
-    //         // }
-    //     }
-    // }
-
-    int h = threadIdx.x;
-    int w = blockDim.y * blockIdx.y + threadIdx.y;
-
-    int b = blockIdx.x;
-
-    if(h<7 && w<7){
+    // bias is applied to every pixel
+    if(tid < N){
         if(b<BATCH_SIZE){
             for (int c = 0; c < 64; c++) {
                 d_cuda_layer_5_output[index4D_cuda(b,h,w,c,7,7,64)] = lowest;
             }
         }
-        for (int kH = 0; kH < 2; kH++) {
-            for (int kW = 0; kW < 2; kW++) {
+    }
+
+    __syncthreads();
+
+    // edge pixels are skipped here because they cannot fit entire convolution window
+    if(idx < N*N){
+        for (int kH = 0; kH<kernel_size; kH++){
+            for (int kW = 0; kW<kernel_size; kW++){
                 if(b<BATCH_SIZE){
-                    for(int c=0;c<64;c++) {
+                    for (int c = 0; c < 64; c++) {
                         d_cuda_layer_5_output[index4D_cuda(b,h,w,c,7,7,64)] = 
                         (d_cuda_layer_4_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,14,14,64)] >= d_cuda_layer_5_output[index4D_cuda(b,h,w,c,7,7,64)]) ? 
                         d_cuda_layer_4_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,14,14,64)] : d_cuda_layer_5_output[index4D_cuda(b,h,w,c,7,7,64)];
@@ -751,9 +691,9 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
 
     // define thread and block sizes
     const int BLKXSIZE = 7;
-    const int BLKYSIZE = 7;
+    const int BLKYSIZE = 1;
     const int GRIDXSIZE = BATCH_SIZE;
-    const int GRIDYSIZE = 1;
+    const int GRIDYSIZE = 7;
 
     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 foor loops 7 iterations each
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
@@ -809,7 +749,7 @@ __global__ void layer8_gemm_kernel(unsigned long long *d_cuda_layer_7_output, fl
 
     int z = blockDim.x * blockIdx.z + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
-    
+
     int d = z*blockDim.x+y;
 
     int b = blockIdx.x;
@@ -887,19 +827,17 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     cudaFree(d_cuda_layer_8_output);
     cudaCheckErrors("cudaFree fail");
 
-    // checksum
+    // checksum L8 = 8936.000000
     // float sum = 0;
-    // ofstream g("layer_8_par.out");
+    // ofstream g("layer_8_par1.out");
     // for(int b=0;b<BATCH_SIZE;b++){
     //     sum=0;
     //     for(int i=b*2048;i<(b+1)*2048;i++){
     //         sum += cuda_layer_8_output[i];
     //         g<<cuda_layer_8_output[i]<<" ";  
     //     }
-    //     g<<"\n";
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
-
     return milliseconds;
 }
 
@@ -982,7 +920,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     cudaFree(d_cuda_layer_10_output);
     cudaCheckErrors("cudaFree fail");
 
-    // checksum
+    // checksum L10 = -666.000000
     // float sum = 0;
     // ofstream g("layer_10_par1.out");
     // for(int b=0;b<BATCH_SIZE;b++){
@@ -991,10 +929,8 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     //         sum += cuda_layer_10_output[i];
     //         g<<cuda_layer_10_output[i]<<" ";  
     //     }
-    //     g<<"\n";
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
-
     return milliseconds;
 }
 

@@ -86,7 +86,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
             for (int j = 1; j < 10; j++) {
                 if (output[b*10 + j] > max) {
                     max = output[b*10 + j];
-                    argmax = b*10 + j;
+                    argmax = j;
                 }
             }
 

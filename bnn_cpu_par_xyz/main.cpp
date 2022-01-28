@@ -36,7 +36,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     int matches[BATCH_SIZE] = {0};
     int const imgsize = 28*28;
     int lsize = loaderx[0].size();
-    float total_kernel_time = 0;
+    float total_kernel_time = 0, l1_kernel_time = 0, l3_time = 0, l6_time = 0, l9_time = 0;
     
     auto start = std::chrono::high_resolution_clock::now();
     for (unsigned int i = 0; i < lsize; i+=factor) { // i := # image
@@ -77,8 +77,13 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
         //     }
         //     printf("\n\n");
         // }
-        
-        total_kernel_time += predict_NeuralNet(img, output);
+        float fst, snd, trd, f4h, f5h;
+        std::tie(fst, snd, trd, f4h, f5h) = predict_NeuralNet(img, output);
+        total_kernel_time += fst;
+        l1_kernel_time += snd;
+        l3_time += trd;
+        l6_time += f4h;
+        l9_time += f5h;
         
         for(int b = 0; b < BATCH_SIZE; b++){
             float max = output[b*10];
@@ -108,7 +113,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     auto cpu_time = static_cast<float>(total_cpu_time) / (lsize/factor) / BATCH_SIZE;
     auto kernel_time = static_cast<float>(total_kernel_time) / (lsize/factor) / BATCH_SIZE;
 
-    return std::make_tuple(accuracy, total_cpu_time, cpu_time, total_kernel_time, kernel_time);
+    return std::make_tuple(accuracy, total_cpu_time, cpu_time, total_kernel_time, kernel_time, l1_kernel_time, l3_time, l6_time, l9_time);
 }
 
 int main() {
@@ -143,6 +148,14 @@ int main() {
     printf("\n");
     printf("Total CPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<1>(results)/1000.0f, std::get<2>(results));
     printf("Total GPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<3>(results)/1000.0f, std::get<4>(results));
+    printf("\n");
+    float l1_kernel_time = std::get<5>(results); // ms
+    float l3_time = std::get<6>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l6_time = std::get<7>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l9_time = std::get<8>(results)/1000000.0f; // ns / 1e6 -> ms
+    float sum = l3_time+l6_time+l9_time;
+    printf("Layer 1 kernel time: %.2f [s]\nLayer 3 CPU time: %.2f [ms] Ratio to L1: %.2f%\nLayer 6 CPU time: %.2f [ms] Ratio to L1: %.2f%\nLayer 9 CPU time: %.2f [ms] Ratio to L1: %.2f%\nTotal L3+L6+L9: %.2f [ms] Total Ratio: %.2f%\n", 
+        l1_kernel_time/1000.0f, l3_time, (l3_time/l1_kernel_time)*100, l6_time, (l6_time/l1_kernel_time)*100, l9_time, (l9_time/l1_kernel_time)*100, sum, (sum/l1_kernel_time)*100);
 
     return 0;
 }

@@ -128,10 +128,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
 
 float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
-    // size_t free, total;
-    // printf("\n");
-    // cudaMemGetInfo(&free,&total);   
-    // printf("before: %d KB free of total %d KB\n",free/1024,total/1024);
+    setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
     
     // initialize layer_0_output where x is the input image
     unsigned char (*layer_0_output)[BATCH_SIZE][28][1] = (unsigned char (*)[BATCH_SIZE][28][1]) x;
@@ -278,6 +275,9 @@ __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cud
 }
 
 float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_output){
+
+    setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
+
     // flatten 3D -> 1D arrays
     // no 3D arrays to be flattened
 
@@ -534,6 +534,9 @@ __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, fl
 }
 
 float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * cuda_layer_4_output){
+
+    setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
+
     // flatten 3D -> 1D arrays
     // flatten layer_4_weight
     unsigned long long *cuda_layer_4_weight = (unsigned long long *) layer_4_weight;
@@ -659,6 +662,9 @@ __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, sign
 }
 
 float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cuda_layer_5_output){
+
+    setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
+
     // flatten 3D -> 1D arrays
     // no arrays to be flattened
 
@@ -753,6 +759,9 @@ __global__ void layer8_gemm_kernel(unsigned long long *d_cuda_layer_7_output, fl
 }
 
 float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * cuda_layer_8_output){
+
+    setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
+
     // flatten 3D -> 1D arrays
     // flatten layer_8_weight
     unsigned long long *cuda_layer_8_weight = (unsigned long long *) layer_8_weight;
@@ -847,6 +856,9 @@ __global__ void layer10_gemm_kernel(unsigned long long *d_cuda_layer_9_output, f
 }
 
 float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short * cuda_layer_10_output){
+
+    setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
+    
     // flatten 3D -> 1D arrays
     // flatten layer_10_weight
     unsigned long long *cuda_layer_10_weight = (unsigned long long *) layer_10_weight;

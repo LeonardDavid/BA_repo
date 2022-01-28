@@ -1,4 +1,4 @@
-#define BATCH_SIZE 2
+#define BATCH_SIZE 32
 #define NR_NEURONS 64
 
 #pragma once 

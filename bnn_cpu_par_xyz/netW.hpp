@@ -34,7 +34,7 @@ static signed short cuda_layer_5_output[BATCH_SIZE*3136];
 static unsigned long long layer_6_output[BATCH_SIZE][7][7][1]; // x64 adresses as hex
 static unsigned long long cuda_layer_6_output[BATCH_SIZE*3136]; // 49?
 
-static unsigned long long cuda_layer_7_output[BATCH_SIZE*3136];
+// static unsigned long long cuda_layer_7_output[BATCH_SIZE*3136];
 
 static signed short layer_8_output[BATCH_SIZE*2048];
 // only needed for comparison purposes

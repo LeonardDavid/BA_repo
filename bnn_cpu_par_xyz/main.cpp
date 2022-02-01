@@ -1,7 +1,7 @@
 /*
     Run with: 
     $ make
-    $ ./batch_par_gpu.o
+    $ ./parxyz.o
 */
 
 #include <iostream>
@@ -41,15 +41,8 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     auto start = std::chrono::high_resolution_clock::now();
     for (unsigned int i = 0; i < lsize; i+=factor) { // i := # image
         std::fill(output, output+10*BATCH_SIZE, 0);
-
-        // make all of these declarations pretier later, maybe with pointers
-        // load (flattened) image i of every batch in 1 array, at a distance of imgsize
-        /*
-            gives segmentation fault for BATCH_SIZE>4
-                - declare multiple *img each of size BATCH_SIZE*imgsize and execute them in kernel on gridY?
-        */
        
-        unsigned char * img; //img[BATCH_SIZE*imgsize];
+        unsigned char * img;
         img = (unsigned char*) malloc (BATCH_SIZE*imgsize);
 
         // load label i of corresponding image from every batch in an array
@@ -57,9 +50,9 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
 
         for(int b=0; b<BATCH_SIZE; b++){    // b := # batch
             for(int p=0; p<imgsize; p++){   // p := # pixel
-                img[b*imgsize+p] = loaderx[b].images(i)[p]; //  loaderx[b].images(i)[p];
+                img[b*imgsize+p] = loaderx[b].images(i)[p]; 
             }
-            label[b] = loaderx[b].labels(i); // loaderx[b].labels(i);
+            label[b] = loaderx[b].labels(i); 
         }
         
         // // display img array (remove for before)
@@ -135,9 +128,7 @@ int main() {
     auto batch_loading_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
     printf("Batch loading time: %.2f [s] => Latency: %.4f [s/batch]\n", batch_loading_time/1000.0f, batch_loading_time/BATCH_SIZE/1000.0f);
     printf("\n");
-/*
-    Segmentation fault here?
-*/
+
     auto results = benchmark(loaderx);
 
     /*

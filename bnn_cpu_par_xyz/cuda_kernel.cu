@@ -482,7 +482,7 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
     
-    int N = 28, kernel_size = 3;
+    int N = 14, kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -858,7 +858,7 @@ __global__ void layer10_gemm_kernel(unsigned long long *d_cuda_layer_9_output, f
 float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short * cuda_layer_10_output){
 
     setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
-    
+
     // flatten 3D -> 1D arrays
     // flatten layer_10_weight
     unsigned long long *cuda_layer_10_weight = (unsigned long long *) layer_10_weight;

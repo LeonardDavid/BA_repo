@@ -1,5 +1,8 @@
 #define BATCH_SIZE 2
 #define NR_NEURONS 64
+#define IMG_HEIGHT 28   // original input image
+#define IMG_WIDTH 28    // original input image
+#define OUT_SIZE 10     // number of classes
 
 #pragma once 
 inline int index3D(const int x, const int y, const int z, const int sizey, const int sizez) {

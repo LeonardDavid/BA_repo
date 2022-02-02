@@ -15,8 +15,6 @@ static constexpr float layer_10_bias[10] = {0.0012367647141218185, 0.01867520995
 
 // the layers with prefix cuda_ are flattened to be used in cuda kernels
 
-// static float layer_1_output[output_shape[1][2]][output_shape[1][3]][output_shape[1][1]];
-// error: expression must have a constant value, note: attempt to access run-time storage
 static float layer_1_output[28][28][64];
 static float cuda_layer_1_output[BATCH_SIZE*50176];
 

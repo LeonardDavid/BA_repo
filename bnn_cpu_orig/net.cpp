@@ -23,7 +23,7 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
     //   // cout<<endl;
     // }
 
-    // Layer 1: Conv
+    // Layer 1: Conv @ cpp.NHWC {% else %} /{% if pads == [0, 0, 0, 0] %}
     for (int h = 0; h < 28; h++) {
       for (int w = 0; w < 28; w++) {
         for (int m = 0; m < 64; m++) {
@@ -58,7 +58,7 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
     // }
     // cout<<endl<<endl<<sum<<endl;
 
-    // Layer 2: MaxPool
+    // Layer 2: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
     for (int h = 0; h < 14; h++) {
       for (int w = 0; w < 14; w++) {
         for (int c = 0; c < 64; c++) {
@@ -74,7 +74,7 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
       }
     }
 
-    // Layer 3: Step
+    // Layer 3: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
     for (int h = 0; h < 14; h++) {
       for (int w = 0; w < 14; w++) {
         for (int c = 0; c < 64; c++) {
@@ -87,7 +87,7 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
       }
     }
 
-    // Layer 4: Conv
+    // Layer 4: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
     for (int h = 0; h < 14; h++) {
       for (int w = 0; w < 14; w++) {
         for (int m = 0; m < 64; m++) {
@@ -111,7 +111,7 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
       }
     }
 
-    // Layer 5: MaxPool
+    // Layer 5: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
     for (int h = 0; h < 7; h++) {
       for (int w = 0; w < 7; w++) {
         for (int c = 0; c < 64; c++) {
@@ -127,7 +127,7 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
       }
     }
 
-    // Layer 6: Step
+    // Layer 6: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
     for (int h = 0; h < 7; h++) {
       for (int w = 0; w < 7; w++) {
         for (int c = 0; c < 64; c++) {
@@ -147,10 +147,10 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
     //   }
     // }
 
-    // Layer 7: Flatten
+    // Layer 7: Flatten @ cpp.NHWC:reshape.j2 
     unsigned long long *layer_7_output = (unsigned long long *) layer_6_output;
 
-    // Layer 8: Gemm
+    // Layer 8: Gemm @ cpp.binary 
     for (int d = 0; d < 2048; d++) {
       layer_8_output[d] = layer_8_bias[d];
     }
@@ -160,7 +160,7 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
       }
     }
 
-    // Layer 9: Step
+    // Layer 9: Step @ cpp.binary {% else %} /{% if layer.output_shape|length > 2 %}
     for (int d = 0; d < 2048; d++) {
       if (layer_8_output[d] >layer_9_threshold[d]) {
         layer_9_output[d / 64] |= (1ULL << (63 - d % 64));
@@ -169,7 +169,7 @@ void predict_NeuralNet(unsigned char * const x, float * pred, int threshold) {
       }
     }
 
-    // Layer 10: Gemm
+    // Layer 10: Gemm @ cpp.binary
     for (int d = 0; d < 10; d++) {
       layer_10_output[d] = layer_10_bias[d];
     }

@@ -105,7 +105,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
         accuracy[b] = static_cast<float>(matches[b]) / (lsize/factor) * 100.f;
         printf("Accuracy batch %d: %.1f%, Matches: %d/10000\n", b, accuracy[b],matches[b]);
     }
-
+    
     auto total_cpu_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
     auto cpu_time = static_cast<float>(total_cpu_time) / (lsize/factor) / BATCH_SIZE;
     auto kernel_time = static_cast<float>(total_kernel_time) / (lsize/factor) / BATCH_SIZE;

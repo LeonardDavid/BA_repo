@@ -27,20 +27,20 @@ using namespace std;
 
 auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
 #if defined BINARY || defined INT16
-    int output[BATCH_SIZE*OUT_SIZE] = {0};
+    int output[BATCH_SIZE*10] = {0};
 #else
-    float output[BATCH_SIZE*OUT_SIZE] = {0};
+    float output[BATCH_SIZE*10] = {0};
 #endif
 
     int factor = 1;
     int matches[BATCH_SIZE] = {0};
-    int const imgsize = IMG_HEIGHT*IMG_WIDTH;
+    int const imgsize = 28*28;
     int lsize = loaderx[0].size();
     float total_kernel_time = 0; // l1_kernel_time = 0, l3_time = 0, l6_time = 0, l9_time = 0;
     
     auto start = std::chrono::high_resolution_clock::now();
     for (unsigned int i = 0; i < lsize; i+=factor) { // i := # image
-        std::fill(output, output+OUT_SIZE*BATCH_SIZE, 0);
+        std::fill(output, output+10*BATCH_SIZE, 0);
        
         unsigned char * img;
         img = (unsigned char*) malloc (BATCH_SIZE*imgsize);
@@ -83,11 +83,11 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
         total_kernel_time += predict_NeuralNet(img, output);
         
         for(int b = 0; b < BATCH_SIZE; b++){
-            float max = output[b*OUT_SIZE];
+            float max = output[b*10];
             int argmax = 0;
-            for (int j = 1; j < OUT_SIZE; j++) {
-                if (output[b*OUT_SIZE + j] > max) {
-                    max = output[b*OUT_SIZE + j];
+            for (int j = 1; j < 10; j++) {
+                if (output[b*10 + j] > max) {
+                    max = output[b*10 + j];
                     argmax = j;
                 }
             }

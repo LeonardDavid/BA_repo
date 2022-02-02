@@ -24,7 +24,7 @@ static float layer_19_output[10];
   void predict_NeuralNet(unsigned char x[][32][3], float * pred) {
 		//unsigned char (*layer_0_output)[32][3] = (unsigned char (*)[32][3]) x;
 
-      // Layer 1: Conv @ cpp.NHWC {% else %} /{% if pads == [0, 0, 0, 0] %}
+      // Layer 1: Conv
       for (int h = 0; h < 32; h++) {
         for (int w = 0; w < 32; w++) {
           for (int m = 0; m < 128; m++) {
@@ -48,7 +48,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 2: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
+      // Layer 2: Step
       for (int h = 0; h < 32; h++) {
         for (int w = 0; w < 32; w++) {
           for (int c = 0; c < 128; c++) {
@@ -61,7 +61,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 3: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+      // Layer 3: Conv
       for (int h = 0; h < 32; h++) {
         for (int w = 0; w < 32; w++) {
           for (int m = 0; m < 128; m++) {
@@ -85,8 +85,7 @@ static float layer_19_output[10];
         }
       }
 
-      // // Layer 4: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
-
+      // // Layer 4: MaxPool
       // for (int h = 0; h < 16; h++) {
       //   for (int w = 0; w < 16; w++) {
       //     for (int c = 0; c < 2; c++) {
@@ -116,7 +115,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 5: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
+      // Layer 5: Step
       for (int h = 0; h < 16; h++) {
         for (int w = 0; w < 16; w++) {
           for (int c = 0; c < 128; c++) {
@@ -129,7 +128,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 6: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+      // Layer 6: Conv
       for (int h = 0; h < 16; h++) {
         for (int w = 0; w < 16; w++) {
           for (int m = 0; m < 256; m++) {
@@ -153,7 +152,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 7: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
+      // Layer 7: Step
       for (int h = 0; h < 16; h++) {
         for (int w = 0; w < 16; w++) {
           for (int c = 0; c < 256; c++) {
@@ -166,7 +165,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 8: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+      // Layer 8: Conv
       for (int h = 0; h < 16; h++) {
         for (int w = 0; w < 16; w++) {
           for (int m = 0; m < 256; m++) {
@@ -190,7 +189,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 9: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
+      // Layer 9: MaxPool
       for (int h = 0; h < 8; h++) {
         for (int w = 0; w < 8; w++) {
           for (int c = 0; c < 256; c++) {
@@ -206,7 +205,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 10: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
+      // Layer 10: Step
       for (int h = 0; h < 8; h++) {
         for (int w = 0; w < 8; w++) {
           for (int c = 0; c < 256; c++) {
@@ -219,7 +218,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 11: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+      // Layer 11: Conv
       for (int h = 0; h < 8; h++) {
         for (int w = 0; w < 8; w++) {
           for (int m = 0; m < 512; m++) {
@@ -243,7 +242,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 12: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
+      // Layer 12: Step
       for (int h = 0; h < 8; h++) {
         for (int w = 0; w < 8; w++) {
           for (int c = 0; c < 512; c++) {
@@ -256,7 +255,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 13: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+      // Layer 13: Conv
       for (int h = 0; h < 8; h++) {
         for (int w = 0; w < 8; w++) {
           for (int m = 0; m < 512; m++) {
@@ -280,7 +279,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 14: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
+      // Layer 14: MaxPool
       for (int h = 0; h < 4; h++) {
         for (int w = 0; w < 4; w++) {
           for (int c = 0; c < 512; c++) {
@@ -296,7 +295,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 15: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
+      // Layer 15: Step
       for (int h = 0; h < 4; h++) {
         for (int w = 0; w < 4; w++) {
           for (int c = 0; c < 512; c++) {
@@ -309,10 +308,10 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 16: Flatten @ cpp.NHWC:reshape.j2 
+      // Layer 16: Flatten
       unsigned long long *layer_16_output = (unsigned long long *) layer_15_output;
 
-      // Layer 17: Gemm @ cpp.binary
+      // Layer 17: Gemm
       for (int d = 0; d < 1024; d++) {
         layer_17_output[d] = layer_17_bias[d];
       }
@@ -322,7 +321,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 18: Step @ cpp.binary {% else %} /{% if layer.output_shape|length > 2 %}
+      // Layer 18: Step
       for (int d = 0; d < 1024; d++) {
         if (layer_17_output[d] >layer_18_threshold[d]) {
           layer_18_output[d / 64] |= (1ULL << (63 - d % 64));
@@ -331,7 +330,7 @@ static float layer_19_output[10];
         }
       }
 
-      // Layer 19: Gemm @ cpp.binary
+      // Layer 19: Gemm
       for (int d = 0; d < 10; d++) {
         layer_19_output[d] = layer_19_bias[d];
       }

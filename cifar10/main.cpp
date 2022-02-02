@@ -1,9 +1,3 @@
-/*
-    I believe these args were used in generating the code:
-    --base-implementation: cpp.NHWC
-    --implementation: cpp.binary
-*/
-
 #include <iostream>
 #include <chrono>
 #include <algorithm>

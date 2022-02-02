@@ -1,4 +1,6 @@
 /*
+    For profiling all layers
+    
     Run with: 
     $ make
     $ ./parxyz.o

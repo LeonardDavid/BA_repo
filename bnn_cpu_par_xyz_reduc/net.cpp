@@ -7,15 +7,24 @@
 
 using namespace std;
 
-float predict_NeuralNet(unsigned char * const x, float * output) { // std::tuple<float,float,float,float,float> 
+std::tuple<float,float,float,float,float,float,float,float,float,float,float,float,float,float,float,float>  
+predict_NeuralNet(unsigned char * const x, float * output) {
   // possibly not valid c++ code:
   // unsigned char (*layer_0_output)[28][1] = (unsigned char (*)[28][1]) x;
 
   // add all kernel_time s
   float kernel_time = 0;
+  auto start = std::chrono::high_resolution_clock::now();
   kernel_time += layer1_conv(x, cuda_layer_1_output);
+  auto end = std::chrono::high_resolution_clock::now();
+  auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
   float l1_kernel_time = kernel_time;
+
+  start = std::chrono::high_resolution_clock::now();
   kernel_time += layer2_maxpool(cuda_layer_1_output, cuda_layer_2_output);
+  end = std::chrono::high_resolution_clock::now();  
+  auto l2_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  float l2_kernel_time = kernel_time-l1_kernel_time;
 
   /*
       to run without the outputs from line 58-126: 
@@ -30,7 +39,7 @@ float predict_NeuralNet(unsigned char * const x, float * output) { // std::tuple
     - for ABSOLUTELY NO REASON if the line is present AFTER (!!) the cout/calculation with l30, the correct answer will be calculated
   */
 
-  // auto start = std::chrono::high_resolution_clock::now();
+  start = std::chrono::high_resolution_clock::now();
   for(int b=0;b<BATCH_SIZE;b++){
     for (int h = 0; h < 14; h++) {
       for (int w = 0; w < 14; w++) {
@@ -57,8 +66,8 @@ float predict_NeuralNet(unsigned char * const x, float * output) { // std::tuple
       }
     }
   }
-  // auto end = std::chrono::high_resolution_clock::now();
-  // auto l3_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  end = std::chrono::high_resolution_clock::now();
+  auto l3_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
 
   // the method below for flattening does not lead to the correct result
   // unsigned long long *cuda_layer_3_output = (unsigned long long *) layer_3_output;
@@ -139,15 +148,23 @@ float predict_NeuralNet(unsigned char * const x, float * output) { // std::tuple
   // cout<<"---------------------------------end---------------------------------"<<endl;
   // cout<<endl<<endl;
 
-
+  start = std::chrono::high_resolution_clock::now();
   kernel_time += layer4_conv(cuda_layer_3_output, cuda_layer_4_output);
+  end = std::chrono::high_resolution_clock::now();    
+  auto l4_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
+  float l4_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time);
+
+  start = std::chrono::high_resolution_clock::now();
   kernel_time += layer5_maxpool(cuda_layer_4_output, cuda_layer_5_output);
+  end = std::chrono::high_resolution_clock::now();    
+  auto l5_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  float l5_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time);
 
   // layer6_step(cuda_layer_5_output, cuda_layer_6_output);
   /*
     Same as layer3_step
   */
-  // start = std::chrono::high_resolution_clock::now();
+  start = std::chrono::high_resolution_clock::now();
   for(int b=0;b<BATCH_SIZE;b++){
     for (int h = 0; h < 7; h++) {
       for (int w = 0; w < 7; w++) {
@@ -161,8 +178,8 @@ float predict_NeuralNet(unsigned char * const x, float * output) { // std::tuple
       }
     }
   }
-  // end = std::chrono::high_resolution_clock::now();
-  // auto l6_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  end = std::chrono::high_resolution_clock::now();
+  auto l6_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
 
     // flatten layer_6_output into cuda_layer_6_output for further usage
     // for(int i=0;i<7;i++){
@@ -176,13 +193,17 @@ float predict_NeuralNet(unsigned char * const x, float * output) { // std::tuple
   // Layer 7 is flattening layer -> cuda_layer_6_output skipped
   unsigned long long *layer_7_output = (unsigned long long *) layer_6_output; // size = 49
   
+  start = std::chrono::high_resolution_clock::now();
   kernel_time += layer8_gemm(layer_7_output, cuda_layer_8_output);
+  end = std::chrono::high_resolution_clock::now();  
+  auto l8_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  float l8_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time);
 
   // layer9_step(cuda_layer_8_output, cuda_layer_9_output);
   /*
     Same as layer9_step
   */
-  // start = std::chrono::high_resolution_clock::now();
+  start = std::chrono::high_resolution_clock::now();
   for(int b=0;b<BATCH_SIZE;b++){
     for (int d = 0; d < 2048; d++) {
       if (cuda_layer_8_output[b*2048 + d] > layer_9_threshold[d]) {
@@ -192,13 +213,17 @@ float predict_NeuralNet(unsigned char * const x, float * output) { // std::tuple
       }
     }
   }
-  // end = std::chrono::high_resolution_clock::now();
-  // auto l9_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  end = std::chrono::high_resolution_clock::now();
+  auto l9_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
 
   unsigned long long *cuda_layer_9_output = (unsigned long long *) layer_9_output;
   
   // worth it for 10 iterations? not really
+  start = std::chrono::high_resolution_clock::now();
   kernel_time += layer10_gemm(cuda_layer_9_output, cuda_layer_10_output);
+  end = std::chrono::high_resolution_clock::now();    
+  auto l10_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
+  float l10_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time+l8_kernel_time);
 
   for(int b=0;b<BATCH_SIZE;b++){
     for (int i = 0; i < 10; i++) {
@@ -206,8 +231,8 @@ float predict_NeuralNet(unsigned char * const x, float * output) { // std::tuple
     }
   }
 
-  // l3_time+=l6_time + l9_time;
-
-  return kernel_time;
+  return make_tuple(kernel_time, l1_time, l2_time, l3_time, l4_time, l5_time, l6_time, l8_time, l9_time, l10_time, 
+    l1_kernel_time, l2_kernel_time, l4_kernel_time, l5_kernel_time, l8_kernel_time, l10_kernel_time);
+  // return kernel_time;
 
 }

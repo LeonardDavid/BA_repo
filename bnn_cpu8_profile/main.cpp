@@ -83,6 +83,7 @@ auto benchmark(MNISTLoader &loader, bool verbose = false) {
 
     float accuracy = static_cast<float>(matches) / (loader.size()/factor) * 100.f;
     auto total_cpu_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
+    total_cpu_time -= total_kernel_time;
     auto cpu_time = static_cast<float>(total_cpu_time) / (loader.size()/factor);
     auto kernel_time = static_cast<float>(total_kernel_time) / (loader.size()/factor);
 

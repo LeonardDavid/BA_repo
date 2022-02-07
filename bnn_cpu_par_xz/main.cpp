@@ -98,6 +98,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     }
 
     auto total_cpu_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());
+    total_cpu_time -= total_kernel_time;
     auto cpu_time = static_cast<float>(total_cpu_time) / (lsize/factor) / BATCH_SIZE;
     auto kernel_time = static_cast<float>(total_kernel_time) / (lsize/factor) / BATCH_SIZE;
 

@@ -19,12 +19,14 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   auto end = std::chrono::high_resolution_clock::now();
   auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
   float l1_kernel_time = kernel_time;
+  l1_time -= l1_kernel_time*1000000.0f; // ms->ns
 
   start = std::chrono::high_resolution_clock::now();
   kernel_time += layer2_maxpool(cuda_layer_1_output, cuda_layer_2_output);
   end = std::chrono::high_resolution_clock::now();  
   auto l2_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
   float l2_kernel_time = kernel_time-l1_kernel_time;
+  l2_time -= l2_kernel_time*1000000.0f; // ms->ns
 
   /*
       to run without the outputs from line 58-126: 
@@ -153,12 +155,14 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   end = std::chrono::high_resolution_clock::now();    
   auto l4_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
   float l4_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time);
+  l4_time -= l4_kernel_time*1000000.0f; // ms->ns
 
   start = std::chrono::high_resolution_clock::now();
   kernel_time += layer5_maxpool(cuda_layer_4_output, cuda_layer_5_output);
   end = std::chrono::high_resolution_clock::now();    
   auto l5_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
   float l5_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time);
+  l5_time -= l5_kernel_time*1000000.0f; // ms->ns
 
   // layer6_step(cuda_layer_5_output, cuda_layer_6_output);
   /*
@@ -198,6 +202,7 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   end = std::chrono::high_resolution_clock::now();  
   auto l8_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
   float l8_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time);
+  l8_time -= l8_kernel_time*1000000.0f; // ms->ns
 
   // layer9_step(cuda_layer_8_output, cuda_layer_9_output);
   /*
@@ -224,6 +229,7 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   end = std::chrono::high_resolution_clock::now();    
   auto l10_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
   float l10_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time+l8_kernel_time);
+  l10_time -= l10_kernel_time*1000000.0f; // ms->ns
 
   for(int b=0;b<BATCH_SIZE;b++){
     for (int i = 0; i < 10; i++) {

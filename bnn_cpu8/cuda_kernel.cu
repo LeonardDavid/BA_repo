@@ -319,7 +319,7 @@ __global__ void layer3_step_kernel(float *d_cuda_layer_2_output, signed short *d
                 /*
                     tried different combination here c,(c/64),0,1,64,14
                 */
-                atomicOr(&d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)], (1ULL << (63 - c % 64)));
+                // atomicOr(&d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)], (1ULL << (63 - c % 64)));
                 // printf("%f > %d : OR : %llu\n", d_cuda_layer_2_output[index3D_cuda(h,w,c,14,1)], d_layer_3_threshold[c], d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)]);
                 printf("%llu ", d_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)]);
                 // d_res_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)] = d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] | (1ULL << (63 - c % 64));
@@ -331,7 +331,7 @@ __global__ void layer3_step_kernel(float *d_cuda_layer_2_output, signed short *d
                 // if(h==1)
                     // printf("~%llu ",d_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)]);
                 // printf("(%llu - ",d_res_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)]);
-                atomicAnd(&d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)], ~(1ULL << (63 - c % 64)));
+                // atomicAnd(&d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)], ~(1ULL << (63 - c % 64)));
                 // printf("%f < %d : AND : %llu\n", d_cuda_layer_2_output[index3D_cuda(h,w,c,14,1)], d_layer_3_threshold[c], d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)]);
                 printf("%llu ", d_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)]);
                 // d_res_cuda_layer_3_output[index3D_cuda(h,w,c,14,64)] = d_cuda_layer_3_output[index3D_cuda(h,w,(c/64),14,1)] & ~(1ULL << (63 - c % 64));

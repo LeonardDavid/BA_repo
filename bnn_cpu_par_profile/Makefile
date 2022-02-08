@@ -2,9 +2,9 @@ intel:
 	nvcc -G -c cuda_kernel.cu
 	g++ -c -g -w -std=c++14 main.cpp net.cpp -I net.hpp netW.hpp -O3
 ifeq ($(shell hostname), LDB-XPS)
-	g++ -o parxyz.o cuda_kernel.o net.o main.o -L/usr/local/cuda/lib64 -lcudart # for LDB-XPS system at home
+	g++ -o parprof.o cuda_kernel.o net.o main.o -L/usr/local/cuda/lib64 -lcudart # for LDB-XPS system at home
 else
-	g++ -o parxyz.o cuda_kernel.o net.o main.o -L/usr/local/cuda-10.0/lib64 -lcudart # for system on Uni-server
+	g++ -o parprof.o cuda_kernel.o net.o main.o -L/usr/local/cuda-10.0/lib64 -lcudart # for system on Uni-server
 endif
 
 clean:

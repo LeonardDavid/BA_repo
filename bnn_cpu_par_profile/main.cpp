@@ -3,7 +3,7 @@
     
     Run with: 
     $ make
-    $ ./parxyz.o
+    $ ./parprof.o
 */
 
 #include <iostream>

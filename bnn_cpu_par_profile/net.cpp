@@ -224,12 +224,28 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   unsigned long long *cuda_layer_9_output = (unsigned long long *) layer_9_output;
   
   // worth it for 10 iterations? not really
+  // start = std::chrono::high_resolution_clock::now();
+  // kernel_time += layer10_gemm(cuda_layer_9_output, cuda_layer_10_output);
+  // end = std::chrono::high_resolution_clock::now();    
+  // auto l10_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
+  // float l10_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time+l8_kernel_time);
+  // l10_time -= l10_kernel_time*1000000.0f; // ms->ns
+
+  // Layer 10: Gemm @ cpp.binary
   start = std::chrono::high_resolution_clock::now();
-  kernel_time += layer10_gemm(cuda_layer_9_output, cuda_layer_10_output);
+  for(int b = 0; b < BATCH_SIZE; b++){
+    for (int d = 0; d < 10; d++) {
+      cuda_layer_10_output[b*10 + d] = layer_10_bias[d];
+    }
+    for (int d = 0; d < 10; d++) {
+      for (int i = 0; i < 32; i++) {
+        cuda_layer_10_output[b*10 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_10_weight[d][i] ^ cuda_layer_9_output[i])) - 64;
+      }
+    }
+  }
   end = std::chrono::high_resolution_clock::now();    
   auto l10_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
-  float l10_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time+l8_kernel_time);
-  l10_time -= l10_kernel_time*1000000.0f; // ms->ns
+  float l10_kernel_time = 0;
 
   for(int b=0;b<BATCH_SIZE;b++){
     for (int i = 0; i < 10; i++) {

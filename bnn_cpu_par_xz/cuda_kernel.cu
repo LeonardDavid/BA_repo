@@ -67,7 +67,7 @@ using namespace std;
     return milliseconds;
 */
 
-// Layer 1 - Convolution
+// Layer 1 - Convolution (xz)
 
 __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *d_layer_1_bias, signed char *d_cuda_layer_1_weight, float *d_cuda_layer_1_output){
 
@@ -202,7 +202,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     return milliseconds;
 }
 
-// Layer 2 - Maxpool
+// Layer 2 - Maxpool (xz)
 
 __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
@@ -437,7 +437,7 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
 
 // END WORK IN PROGRESS
 
-// Layer 4 - Convolution
+// Layer 4 - Convolution (xz)
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
 
@@ -555,7 +555,7 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     return milliseconds;
 }
 
-// Layer 5 - Maxpool
+// Layer 5 - Maxpool (xz)
 __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, signed short * d_cuda_layer_5_output, signed short lowest){
 
     int h = threadIdx.x;
@@ -661,7 +661,7 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
 // Layer 6 - Step
 // skipped for now
 
-// Layer 8 - Gemm
+// Layer 8 - Gemm (xz)
 __global__ void layer8_gemm_kernel(unsigned long long *d_cuda_layer_7_output, float *d_layer_8_bias, unsigned long long *d_cuda_layer_8_weight, signed short *d_cuda_layer_8_output){
 
     int z = blockDim.x * blockIdx.z + threadIdx.x;
@@ -760,7 +760,7 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     return milliseconds;
 }
 
-// Layer 10 - Gemm
+// Layer 10 - Gemm (xz)
 __global__ void layer10_gemm_kernel(unsigned long long *d_cuda_layer_9_output, float *d_layer_10_bias, unsigned long long *d_cuda_layer_10_weight, signed short *d_cuda_layer_10_output){
 
     int d = threadIdx.x;

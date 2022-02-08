@@ -9,9 +9,9 @@ float layer2_maxpool(float * layer1, float * layer2){
   return layer2_maxpool_cuda(layer1, layer2);
 }
 
-float layer3_step(float * layer1, unsigned long long * layer2){
-  return layer3_step_cuda(layer1, layer2);
-}
+// float layer3_step(float * layer1, unsigned long long * layer2){
+//   return layer3_step_cuda(layer1, layer2);
+// }
 
 float layer4_conv(unsigned long long * layer1, signed short * layer2){
   return layer4_conv_cuda(layer1, layer2);
@@ -25,6 +25,6 @@ float layer8_gemm(unsigned long long * layer1, signed short * layer2){
   return layer8_gemm_cuda(layer1, layer2);
 }
 
-float layer10_gemm(unsigned long long * layer1, signed short * layer2){
-  return layer10_gemm_cuda(layer1, layer2);
-}
+// float layer10_gemm(unsigned long long * layer1, signed short * layer2){
+//   return layer10_gemm_cuda(layer1, layer2);
+// }

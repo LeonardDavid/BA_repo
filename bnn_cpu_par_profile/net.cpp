@@ -21,12 +21,34 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   float l1_kernel_time = kernel_time;
   l1_time -= l1_kernel_time*1000000.0f; // ms->ns
 
+  // start = std::chrono::high_resolution_clock::now();
+  // kernel_time += layer2_maxpool(cuda_layer_1_output, cuda_layer_2_output);
+  // end = std::chrono::high_resolution_clock::now();  
+  // auto l2_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  // float l2_kernel_time = kernel_time-l1_kernel_time;
+  // l2_time -= l2_kernel_time*1000000.0f; // ms->ns
+
   start = std::chrono::high_resolution_clock::now();
-  kernel_time += layer2_maxpool(cuda_layer_1_output, cuda_layer_2_output);
+  // Layer 2: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
+  for(int b = 0; b < BATCH_SIZE; b++){
+    for (int h = 0; h < 14; h++) {
+      for (int w = 0; w < 14; w++) {
+        for (int c = 0; c < 64; c++) {
+          cuda_layer_2_output[index4D(b,h,w,c,14,14,64)] = std::numeric_limits<float>::lowest();
+        }
+        for (int kH = 0; kH < 2; kH++) {
+          for (int kW = 0; kW < 2; kW++) {
+            for (int c = 0; c < 64; c++) {
+              cuda_layer_2_output[index4D(b,h,w,c,14,14,64)] = std::max(cuda_layer_1_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], cuda_layer_2_output[index4D(b,h,w,c,14,14,64)]);
+            }
+          }
+        }
+      }
+    }
+  }
   end = std::chrono::high_resolution_clock::now();  
-  auto l2_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  float l2_kernel_time = kernel_time-l1_kernel_time;
-  l2_time -= l2_kernel_time*1000000.0f; // ms->ns
+  auto l2_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
+  float l2_kernel_time = 0;
 
   /*
       to run without the outputs from line 58-126: 
@@ -157,12 +179,34 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   float l4_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time);
   l4_time -= l4_kernel_time*1000000.0f; // ms->ns
 
+  // start = std::chrono::high_resolution_clock::now();
+  // kernel_time += layer5_maxpool(cuda_layer_4_output, cuda_layer_5_output);
+  // end = std::chrono::high_resolution_clock::now();    
+  // auto l5_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  // float l5_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time);
+  // l5_time -= l5_kernel_time*1000000.0f; // ms->ns
+
   start = std::chrono::high_resolution_clock::now();
-  kernel_time += layer5_maxpool(cuda_layer_4_output, cuda_layer_5_output);
+  // Layer 5: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
+  for(int b = 0; b < BATCH_SIZE; b++){
+    for (int h = 0; h < 7; h++) {
+      for (int w = 0; w < 7; w++) {
+        for (int c = 0; c < 64; c++) {
+          cuda_layer_5_output[index4D(b,h,w,c,7,7,64)] = std::numeric_limits<signed short>::lowest();
+        }
+        for (int kH = 0; kH < 2; kH++) {
+          for (int kW = 0; kW < 2; kW++) {
+            for (int c = 0; c < 64; c++) {
+              cuda_layer_5_output[index4D(b,h,w,c,7,7,64)] = std::max(cuda_layer_4_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,14,14,64)], cuda_layer_5_output[index4D(b,h,w,c,7,7,64)]);
+            }
+          }
+        }
+      }
+    }
+  }
   end = std::chrono::high_resolution_clock::now();    
-  auto l5_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  float l5_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time);
-  l5_time -= l5_kernel_time*1000000.0f; // ms->ns
+  auto l5_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
+  float l5_kernel_time = 0;
 
   // layer6_step(cuda_layer_5_output, cuda_layer_6_output);
   /*
@@ -223,29 +267,29 @@ predict_NeuralNet(unsigned char * const x, float * output) {
 
   unsigned long long *cuda_layer_9_output = (unsigned long long *) layer_9_output;
   
-  // worth it for 10 iterations? not really
-  start = std::chrono::high_resolution_clock::now();
-  kernel_time += layer10_gemm(cuda_layer_9_output, cuda_layer_10_output);
-  end = std::chrono::high_resolution_clock::now();    
-  auto l10_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
-  float l10_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time+l8_kernel_time);
-  l10_time -= l10_kernel_time*1000000.0f; // ms->ns
-
-  // // Layer 10: Gemm @ cpp.binary
+  // // worth it for 10 iterations? not really
   // start = std::chrono::high_resolution_clock::now();
-  // for(int b = 0; b < BATCH_SIZE; b++){
-  //   for (int d = 0; d < 10; d++) {
-  //     cuda_layer_10_output[b*10 + d] = layer_10_bias[d];
-  //   }
-  //   for (int d = 0; d < 10; d++) {
-  //     for (int i = 0; i < 32; i++) {
-  //       cuda_layer_10_output[b*10 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_10_weight[d][i] ^ cuda_layer_9_output[i])) - 64;
-  //     }
-  //   }
-  // }
+  // kernel_time += layer10_gemm(cuda_layer_9_output, cuda_layer_10_output);
   // end = std::chrono::high_resolution_clock::now();    
   // auto l10_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
-  // float l10_kernel_time = 0;
+  // float l10_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time+l8_kernel_time);
+  // l10_time -= l10_kernel_time*1000000.0f; // ms->ns
+
+  // Layer 10: Gemm @ cpp.binary
+  start = std::chrono::high_resolution_clock::now();
+  for(int b = 0; b < BATCH_SIZE; b++){
+    for (int d = 0; d < 10; d++) {
+      cuda_layer_10_output[b*10 + d] = layer_10_bias[d];
+    }
+    for (int d = 0; d < 10; d++) {
+      for (int i = 0; i < 32; i++) {
+        cuda_layer_10_output[b*10 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_10_weight[d][i] ^ cuda_layer_9_output[i])) - 64;
+      }
+    }
+  }
+  end = std::chrono::high_resolution_clock::now();    
+  auto l10_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
+  float l10_kernel_time = 0;
 
   for(int b=0;b<BATCH_SIZE;b++){
     for (int i = 0; i < 10; i++) {

@@ -12,4 +12,4 @@ float layer5_maxpool_cuda(signed short * layer1, signed short * layer2);
 
 float layer8_gemm_cuda(unsigned long long * layer1, signed short * layer2);
 
-// float layer10_gemm_cuda(unsigned long long * layer1, signed short * layer2);
+float layer10_gemm_cuda(unsigned long long * layer1, signed short * layer2);

@@ -14,12 +14,48 @@ predict_NeuralNet(unsigned char * const x, float * output) {
 
   // add all kernel_time s
   float kernel_time = 0;
+  // auto start = std::chrono::high_resolution_clock::now();
+  // kernel_time += layer1_conv(x, cuda_layer_1_output);
+  // auto end = std::chrono::high_resolution_clock::now();
+  // auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  // float l1_kernel_time = kernel_time;
+  // l1_time -= l1_kernel_time*1000000.0f; // ms->ns
+
+  // initialize layer_0_output where x is the input image
+  unsigned char (*layer_0_output)[BATCH_SIZE][28][1] = (unsigned char (*)[BATCH_SIZE][28][1]) x;
+
+  // flatten layer_0_output
+  unsigned char *cuda_layer_0_output = (unsigned char *) layer_0_output;
+
   auto start = std::chrono::high_resolution_clock::now();
-  kernel_time += layer1_conv(x, cuda_layer_1_output);
+  // Layer 1: Conv @ cpp.NHWC {% else %} /{% if pads == [0, 0, 0, 0] %}
+  for(int b = 0; b < BATCH_SIZE; b++){
+    for (int h = 0; h < 28; h++) {
+      for (int w = 0; w < 28; w++) {
+        for (int m = 0; m < 64; m++) {
+          cuda_layer_1_output[index4D(b,h,w,m,28,28,64)] = layer_1_bias[m];
+        }
+        for (int kH = 0; kH < 3; kH++) {
+          int iH = h * 1 + kH - 1;
+          if (iH >= 0 && iH < 28) {
+            for (int kW = 0; kW < 3; kW++) {
+              int iW = w * 1 + kW - 1;
+              if (iW >= 0 && iW < 28) {
+                for (int c = 0; c < 1; c++) {
+                  for (int m = 0; m < 64; m++) {
+                    cuda_layer_1_output[index4D(b,h,w,m,28,28,64)] += layer_1_weight[kH][kW][c][m] * cuda_layer_0_output[index4D(b,iH,iW,c,28,28,1)];
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   auto end = std::chrono::high_resolution_clock::now();
   auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  float l1_kernel_time = kernel_time;
-  l1_time -= l1_kernel_time*1000000.0f; // ms->ns
+  float l1_kernel_time = 0;
 
   // start = std::chrono::high_resolution_clock::now();
   // kernel_time += layer2_maxpool(cuda_layer_1_output, cuda_layer_2_output);
@@ -172,12 +208,42 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   // cout<<"---------------------------------end---------------------------------"<<endl;
   // cout<<endl<<endl;
 
+  // start = std::chrono::high_resolution_clock::now();
+  // kernel_time += layer4_conv(cuda_layer_3_output, cuda_layer_4_output);
+  // end = std::chrono::high_resolution_clock::now();    
+  // auto l4_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
+  // float l4_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time);
+  // l4_time -= l4_kernel_time*1000000.0f; // ms->ns
+
   start = std::chrono::high_resolution_clock::now();
-  kernel_time += layer4_conv(cuda_layer_3_output, cuda_layer_4_output);
+  // Layer 4: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+  for(int b = 0; b < BATCH_SIZE; b++){
+    for (int h = 0; h < 14; h++) {
+      for (int w = 0; w < 14; w++) {
+        for (int m = 0; m < 64; m++) {
+          cuda_layer_4_output[index4D(b,h,w,m,14,14,64)] = layer_4_bias[m];
+        }
+        for (int kH = 0; kH < 3; kH++) {
+          int iH = h * 1 + kH - 1;
+          if (iH >= 0 && iH < 14) {
+            for (int kW = 0; kW < 3; kW++) {
+              int iW = w * 1 + kW - 1;
+              if (iW >= 0 && iW < 14) {
+                for (int m = 0; m < 64; m++) {
+                  for (int c = 0; c < 1; c++) {
+                    cuda_layer_4_output[index4D(b,h,w,m,14,14,64)] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_4_weight[kH][kW][m][c] ^ cuda_layer_3_output[index4D(b,iH,iW,c,14,14,64)])) - 64;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
   end = std::chrono::high_resolution_clock::now();    
   auto l4_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
-  float l4_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time);
-  l4_time -= l4_kernel_time*1000000.0f; // ms->ns
+  float l4_kernel_time = 0;
 
   // start = std::chrono::high_resolution_clock::now();
   // kernel_time += layer5_maxpool(cuda_layer_4_output, cuda_layer_5_output);
@@ -241,12 +307,28 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   // Layer 7 is flattening layer -> cuda_layer_6_output skipped
   unsigned long long *layer_7_output = (unsigned long long *) layer_6_output; // size = 49
   
+  // start = std::chrono::high_resolution_clock::now();
+  // kernel_time += layer8_gemm(layer_7_output, cuda_layer_8_output);
+  // end = std::chrono::high_resolution_clock::now();  
+  // auto l8_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  // float l8_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time);
+  // l8_time -= l8_kernel_time*1000000.0f; // ms->ns
+
   start = std::chrono::high_resolution_clock::now();
-  kernel_time += layer8_gemm(layer_7_output, cuda_layer_8_output);
+  // Layer 8: Gemm @ cpp.binary 
+  for(int b = 0; b < BATCH_SIZE; b++){
+    for (int d = 0; d < 2048; d++) {
+      cuda_layer_8_output[b*2048 + d] = layer_8_bias[d];
+    }
+    for (int d = 0; d < 2048; d++) {
+      for (int i = 0; i < 49; i++) {
+        cuda_layer_8_output[b*2048 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[d][i] ^ layer_7_output[i])) - 64;
+      }
+    }
+  }
   end = std::chrono::high_resolution_clock::now();  
   auto l8_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  float l8_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time);
-  l8_time -= l8_kernel_time*1000000.0f; // ms->ns
+  float l8_kernel_time = 0;
 
   // layer9_step(cuda_layer_8_output, cuda_layer_9_output);
   /*

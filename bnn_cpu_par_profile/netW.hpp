@@ -15,20 +15,20 @@ static constexpr float layer_10_bias[10] = {0.0012367647141218185, 0.01867520995
 
 // the layers with prefix cuda_ are flattened to be used in cuda kernels
 
-static float layer_1_output[28][28][64];
+static float layer_1_output[BATCH_SIZE][28][28][64];
 static float cuda_layer_1_output[BATCH_SIZE*50176];
 
-static float layer_2_output[14][14][64];
+static float layer_2_output[BATCH_SIZE][14][14][64];
 static float cuda_layer_2_output[BATCH_SIZE*12544];
 
 // layer_3_output is ALREADY filled with values. HOW??
 static unsigned long long layer_3_output[BATCH_SIZE][14][14][1]; // x64 addresses as hex
 static unsigned long long cuda_layer_3_output[BATCH_SIZE*12544]; // 196?
 
-static signed short layer_4_output[14][14][64];
+static signed short layer_4_output[BATCH_SIZE][14][14][64];
 static signed short cuda_layer_4_output[BATCH_SIZE*12544];
 
-static signed short layer_5_output[7][7][64];
+static signed short layer_5_output[BATCH_SIZE][7][7][64];
 static signed short cuda_layer_5_output[BATCH_SIZE*3136];
 
 static unsigned long long layer_6_output[BATCH_SIZE][7][7][1]; // x64 adresses as hex

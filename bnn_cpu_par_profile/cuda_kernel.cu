@@ -2531,7 +2531,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, const f
                             for (int c = 0; c < 1; c++) {
                                 if(m<NR_NEURONS) {
                                     // atomicAdd(&d_cuda_layer_1_output[index4D_cuda(b,bid,tid,m,28,28,64)], d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)]);
-                                    // d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+                                    d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
                                     // d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += s_weight[index3D_cuda(kH,kW,c,3,1)] * s_output_0[index3D_cuda(iH,iW,c,28,1)];
                                 }
                             }

@@ -2488,25 +2488,25 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     //idx global index (all blocks) of the image pixel 
     int idx = iy*N +ix;
 
-    const int c = 1; // channels
-    __shared__ float s_weight[kernel_size * kernel_size * c];
-    __shared__ float s_output_0[N*N*c];
-    for (int kH = 0; kH < kernel_size; kH++){
-        int iH = h * 1 + kH - 1;
-        if (iH >= 0 && iH < 28) {
-            for (int kW = 0; kW < kernel_size; kW++){
-                int iW = w * 1 + kW - 1;
-                if (iW >= 0 && iW < 28) {
-                    for (int c = 0; c < 1; c++) {
-                        s_weight[index3D_cuda(kH,kW,c,3,1)] = d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)];
-                        s_output_0[index3D_cuda(iH,iW,c,28,1)] = d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
-                    }
-                }
-            }
-        }
-    }
+    // const int c = 1; // channels
+    // __shared__ float s_weight[kernel_size * kernel_size * c];
+    // __shared__ float s_output_0[N*N*c];
+    // for (int kH = 0; kH < kernel_size; kH++){
+    //     int iH = h * 1 + kH - 1;
+    //     if (iH >= 0 && iH < 28) {
+    //         for (int kW = 0; kW < kernel_size; kW++){
+    //             int iW = w * 1 + kW - 1;
+    //             if (iW >= 0 && iW < 28) {
+    //                 for (int c = 0; c < 1; c++) {
+    //                     s_weight[index3D_cuda(kH,kW,c,3,1)] = d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)];
+    //                     s_output_0[index3D_cuda(iH,iW,c,28,1)] = d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
-    __syncthreads();
+    // __syncthreads();
 
     // bias is applied to every pixel
     if(tid < N){
@@ -2532,7 +2532,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
                                 if(m<NR_NEURONS) {
                                     // atomicAdd(&d_cuda_layer_1_output[index4D_cuda(b,bid,tid,m,28,28,64)], d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)]);
                                     // d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
-                                    d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += s_weight[index3D_cuda(kH,kW,c,3,1)] * s_output_0[index3D_cuda(iH,iW,c,28,1)];
+                                    // d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += s_weight[index3D_cuda(kH,kW,c,3,1)] * s_output_0[index3D_cuda(iH,iW,c,28,1)];
                                 }
                             }
                         }

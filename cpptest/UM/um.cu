@@ -13,7 +13,10 @@ void add(int n, float *x, float *y)
 {
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int stride = blockDim.x * gridDim.x;
-  printf("%f ", x[0]);
+  if(index<64){
+    printf("%f ", x[index]);
+  }
+    
 //   if(index == 0 || index == 63){
 //       printf("device: x[%d]: %f, y[%d]: %f\n",index, x[index],index,y[index]);
 //   }

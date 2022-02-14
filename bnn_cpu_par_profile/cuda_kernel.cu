@@ -2560,13 +2560,13 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     
     // prepare for kernel call
     // declare storage on device
-    unsigned char *d_cuda_layer_0_output = (unsigned char *) cuda_layer_0_output; // storage on device for cuda_layer_0_output
-    const float *d_layer_1_bias = (float *) layer_1_bias; // storage on device for layer_1_bias
-    const signed char *d_cuda_layer_1_weight = (signed char *) cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
+    unsigned char *d_cuda_layer_0_output;// = (unsigned char *) cuda_layer_0_output; // storage on device for cuda_layer_0_output
+    const float *d_layer_1_bias;// = (float *) layer_1_bias; // storage on device for layer_1_bias
+    const signed char *d_cuda_layer_1_weight;// = (signed char *) cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
     float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
     std::cout<<cuda_layer_0_output[0]<<" "<<layer_1_bias[0]<<" "<<cuda_layer_1_weight[0]<<" "<<cuda_layer_1_output[0]<<std::endl;
     std::cout<<d_cuda_layer_0_output[0]<<" "<<d_layer_1_bias[0]<<" "<<d_cuda_layer_1_weight[0]<<std::endl;
-    std::cout<<std::endl;
+    // std::cout<<std::endl;
     
 
     // cudaEvent_t startm, stopm;
@@ -2590,6 +2590,10 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     // auto end1 = std::chrono::high_resolution_clock::now();
     // auto malloc_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
 
+    d_cuda_layer_0_output = cuda_layer_0_output; // storage on device for cuda_layer_0_output
+    d_layer_1_bias = layer_1_bias; // storage on device for layer_1_bias
+    d_cuda_layer_1_weight = cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
+    
     std::cout<<cuda_layer_0_output[0]<<" "<<layer_1_bias[0]<<" "<<cuda_layer_1_weight[0]<<" "<<cuda_layer_1_output[0]<<std::endl;
     std::cout<<d_cuda_layer_0_output[0]<<" "<<d_layer_1_bias[0]<<" "<<d_cuda_layer_1_weight[0]<<" "<<d_cuda_layer_1_output[0]<<std::endl;
     std::cout<<std::endl;

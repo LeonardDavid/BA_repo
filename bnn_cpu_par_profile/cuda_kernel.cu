@@ -2565,10 +2565,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     const signed char *d_cuda_layer_1_weight = (signed char *) cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
     float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
     std::cout<<cuda_layer_0_output[0]<<" "<<layer_1_bias[0]<<" "<<cuda_layer_1_weight[0]<<" "<<cuda_layer_1_output[0]<<std::endl;
-    std::cout<<d_cuda_layer_0_output[0]<<" ";
-    std::cout<<d_layer_1_bias[0]<<" ";
-    std::cout<<d_cuda_layer_1_weight[0]<<" ";
-    std::cout<<d_cuda_layer_1_output[0]<<std::endl;
+    std::cout<<d_cuda_layer_0_output[0]<<" "<<d_layer_1_bias[0]<<" "<<d_cuda_layer_1_weight[0]<<std::endl;
     std::cout<<std::endl;
     
 

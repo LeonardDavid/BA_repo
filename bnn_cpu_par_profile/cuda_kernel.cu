@@ -2639,6 +2639,16 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     // copy result from device to host
     start1 = std::chrono::high_resolution_clock::now();
     // cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (BATCH_SIZE*50176*sizeof(float)), cudaMemcpyDeviceToHost);
+    float sum = 0;
+    ofstream g("layer_1_par.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*50176;i<(b+1)*50176;i++){
+            sum += d_cuda_layer_1_output[i];
+            g<<d_cuda_layer_1_output[i]<<" ";  
+        }
+        cout<<fixed<<"d_batch "<<b<<": "<<sum<<endl;
+    }
     cuda_layer_1_output = d_cuda_layer_1_output;
     cudaCheckErrors("CUDA memcpy failure");
     end1 = std::chrono::high_resolution_clock::now();

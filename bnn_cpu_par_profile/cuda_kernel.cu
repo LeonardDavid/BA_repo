@@ -2488,11 +2488,16 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     //idx global index (all blocks) of the image pixel 
     int idx = iy*N +ix;
 
+    __shared__ float s_bias[NR_NEURONS];
+    s_bias[m] = d_layer_1_bias[m];
+
+    __syncthreads();
+
     // bias is applied to every pixel
     if(tid < N){
         if(b<BATCH_SIZE){
             if(m<NR_NEURONS) {
-                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
+                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = s_bias[m];
             }
         }
     }

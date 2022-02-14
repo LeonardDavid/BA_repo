@@ -2581,7 +2581,7 @@ std::tuple<float, float, float> layer1_conv_cuda(unsigned char * const x, float 
     cudaMallocManaged((void **) &d_layer_1_bias, 64*sizeof(float)); // 64 = dim of layer_1_bias
     cudaMallocManaged((void **) &d_cuda_layer_1_weight, 576*sizeof(signed char)); // 576 = 3x3x1x64 dim of layer_1_weight
     cudaMallocManaged((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
-    // cudaCheckErrors("Failed to allocate device buffer");
+    cudaCheckErrors("Failed to allocate device buffer");
     // cudaEventRecord(stopm);
     auto end1 = std::chrono::high_resolution_clock::now();
     auto malloc_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());

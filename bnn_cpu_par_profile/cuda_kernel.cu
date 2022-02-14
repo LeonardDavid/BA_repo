@@ -2603,6 +2603,9 @@ std::tuple<float, float, float> layer1_conv_cuda(unsigned char * const x, float 
     // cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
 
+    // synchronize threads
+    cudaDeviceSynchronize();
+
     // copy result from device to host
     start1 = std::chrono::high_resolution_clock::now();
     cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (BATCH_SIZE*50176*sizeof(float)), cudaMemcpyDeviceToHost);
@@ -2611,8 +2614,7 @@ std::tuple<float, float, float> layer1_conv_cuda(unsigned char * const x, float 
     auto cpy_time2 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
     auto cpy_time = cpy_time1 + cpy_time2;
 
-    // synchronize threads
-    cudaDeviceSynchronize();
+
     // cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
 

@@ -42,6 +42,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     float total_kernel_time = 0; 
     float l1_time = 0, l2_time = 0, l3_time = 0, l4_time = 0, l5_time = 0, l6_time = 0, l8_time = 0, l9_time = 0, l10_time = 0;
     float l1_ktime = 0, l2_ktime = 0, l4_ktime = 0, l5_ktime = 0, l8_ktime = 0, l10_ktime = 0;
+    float malloc_time = 0, cpy_time = 0;
 
     auto start = std::chrono::high_resolution_clock::now();
     for (unsigned int i = 0; i < lsize; i+=factor) { // i := # image
@@ -77,11 +78,12 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
         // }
 
         // // for profiling Layers
-        float a,b,c,d,e,f,g,h,ii,j,k,l,m,n,o,p;
-        std::tie(a,b,c,d,e,f,g,h,ii,j,k,l,m,n,o,p) = predict_NeuralNet(img, output);
+        float a,b,c,d,e,f,g,h,ii,j,k,l,m,n,o,p,q,r;
+        std::tie(a,b,c,d,e,f,g,h,ii,j,k,l,m,n,o,p,q,r) = predict_NeuralNet(img, output);
         total_kernel_time += a; 
         l1_time += b; l2_time += c; l3_time += d; l4_time += e; l5_time += f; l6_time += g; l8_time += h; l9_time += ii; l10_time += j; 
         l1_ktime += k; l2_ktime += l; l4_ktime += m; l5_ktime += n; l8_ktime += o; l10_ktime += p;
+        malloc_time += q; cpy_time += r;
 
         // total_kernel_time += predict_NeuralNet(img, output);
         
@@ -115,7 +117,8 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     auto kernel_time = static_cast<float>(total_kernel_time) / (lsize/factor) / BATCH_SIZE;
 
     return std::make_tuple(accuracy, total_cpu_time, cpu_time, total_kernel_time, kernel_time, 
-        l1_time, l2_time, l3_time, l4_time, l5_time, l6_time, l8_time, l9_time, l10_time, l1_ktime, l2_ktime, l4_ktime, l5_ktime, l8_ktime, l10_ktime);
+        l1_time, l2_time, l3_time, l4_time, l5_time, l6_time, l8_time, l9_time, l10_time, l1_ktime, l2_ktime, l4_ktime, l5_ktime, l8_ktime, l10_ktime,
+        malloc_time, cpy_time);
 }
 
 int main() {
@@ -151,37 +154,41 @@ int main() {
     printf("\n");
 
     // for profiling Layers
-    float l1_time = std::get<5>(results)/1000000000.0f; // ns / 1e9 -> s
-    float l2_time = std::get<6>(results)/1000000000.0f; // ns / 1e9 -> s
-    float l3_time = std::get<7>(results)/1000000000.0f; // ns / 1e9 -> s
-    float l4_time = std::get<8>(results)/1000000000.0f; // ns / 1e9 -> s
-    float l5_time = std::get<9>(results)/1000000000.0f; // ns / 1e9 -> s
-    float l6_time = std::get<10>(results)/1000000000.0f; // ns / 1e9 -> s
-    float l8_time = std::get<11>(results)/1000000000.0f; // ns / 1e9 -> s
-    float l9_time = std::get<12>(results)/1000000000.0f; // ns / 1e9 -> s
-    float l10_time = std::get<13>(results)/1000000000.0f; // ns / 1e9 -> s
+    float l1_time = std::get<5>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l2_time = std::get<6>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l3_time = std::get<7>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l4_time = std::get<8>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l5_time = std::get<9>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l6_time = std::get<10>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l8_time = std::get<11>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l9_time = std::get<12>(results)/1000000.0f; // ns / 1e6 -> ms
+    float l10_time = std::get<13>(results)/1000000.0f; // ns / 1e6 -> ms
 
-    float l1_ktime = std::get<14>(results)/1000.0f; // ms -> s
-    float l2_ktime = std::get<15>(results)/1000.0f; // ms -> s
-    float l4_ktime = std::get<16>(results)/1000.0f; // ms -> s
-    float l5_ktime = std::get<17>(results)/1000.0f; // ms -> s
-    float l8_ktime = std::get<18>(results)/1000.0f; // ms -> s
-    float l10_ktime = std::get<19>(results)/1000.0f; // ms -> s
+    float l1_ktime = std::get<14>(results)/1.0f; // ms -> ms
+    float l2_ktime = std::get<15>(results)/1.0f; // ms -> ms
+    float l4_ktime = std::get<16>(results)/1.0f; // ms -> ms
+    float l5_ktime = std::get<17>(results)/1.0f; // ms -> ms
+    float l8_ktime = std::get<18>(results)/1.0f; // ms -> ms
+    float l10_ktime = std::get<19>(results)/1.0f; // ms -> ms
+
+    float malloc_time = std::get<20>(results)/1000000.0f; // ns / 1e6 -> ms
+    float cpy_time = std::get<21>(results)/1000000.0f; // ns / 1e6 -> ms
 
     float sum_l = l1_time + l2_time + l3_time + l4_time + l5_time + l6_time + l8_time + l9_time + l10_time;
     float sum_kl = l1_ktime + l2_ktime + l4_ktime + l5_ktime + l8_ktime + l10_ktime;
 
-    printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 1 time:", l1_time, "Ratio:", (l1_time/sum_l)*100, "kernel:", l1_ktime, "kRatio:", (l1_ktime/sum_kl)*100);
-    printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 2 time:", l2_time, "Ratio:", (l2_time/sum_l)*100, "kernel:", l2_ktime, "kRatio:", (l2_ktime/sum_kl)*100);
-    printf("%-15s %-10.2f [s], %-10s %-5.2f%\n", "Layer 3 time:", l3_time, "Ratio:", (l3_time/sum_l)*100);
-    printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 4 time:", l4_time, "Ratio:", (l4_time/sum_l)*100, "kernel:", l4_ktime, "kRatio:", (l4_ktime/sum_kl)*100);
-    printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 5 time:", l5_time, "Ratio:", (l5_time/sum_l)*100, "kernel:", l5_ktime, "kRatio:", (l5_ktime/sum_kl)*100);
-    printf("%-15s %-10.2f [s], %-10s %-5.2f%\n", "Layer 6 time:", l6_time, "Ratio:", (l6_time/sum_l)*100);
-    printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 8 time:", l8_time, "Ratio:", (l8_time/sum_l)*100, "kernel:", l8_ktime, "kRatio:", (l8_ktime/sum_kl)*100);
-    printf("%-15s %-10.2f [s], %-10s %-5.2f%\n", "Layer 9 time:", l9_time, "Ratio:", (l9_time/sum_l)*100);
-    printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 10 time:", l10_time, "Ratio:", (l10_time/sum_l)*100, "kernel:", l10_ktime, "kRatio:", (l10_ktime/sum_kl)*100);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f% => %-5s %-5.2f [ms] %-10s %-5.2f%\n %-50s%-10s %-5.2f [ms]\n %-50s%-10s %-5.2f [ms]\n", "Layer 1 time:", l1_time, "Ratio:", (l1_time/sum_l)*100, "kernel:", l1_ktime, "kRatio:", (l1_ktime/sum_kl)*100,
+                                                                                "","=> malloc:", malloc_time, "","=> copy: ", cpy_time);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f% => %-5s %-5.2f [ms] %-10s %-5.2f%\n", "Layer 2 time:", l2_time, "Ratio:", (l2_time/sum_l)*100, "kernel:", l2_ktime, "kRatio:", (l2_ktime/sum_kl)*100);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f%\n", "Layer 3 time:", l3_time, "Ratio:", (l3_time/sum_l)*100);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f% => %-5s %-5.2f [ms] %-10s %-5.2f%\n", "Layer 4 time:", l4_time, "Ratio:", (l4_time/sum_l)*100, "kernel:", l4_ktime, "kRatio:", (l4_ktime/sum_kl)*100);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f% => %-5s %-5.2f [ms] %-10s %-5.2f%\n", "Layer 5 time:", l5_time, "Ratio:", (l5_time/sum_l)*100, "kernel:", l5_ktime, "kRatio:", (l5_ktime/sum_kl)*100);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f%\n", "Layer 6 time:", l6_time, "Ratio:", (l6_time/sum_l)*100);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f% => %-5s %-5.2f [ms] %-10s %-5.2f%\n", "Layer 8 time:", l8_time, "Ratio:", (l8_time/sum_l)*100, "kernel:", l8_ktime, "kRatio:", (l8_ktime/sum_kl)*100);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f%\n", "Layer 9 time:", l9_time, "Ratio:", (l9_time/sum_l)*100);
+    printf("%-15s %-10.2f [ms], %-10s %-5.2f% => %-5s %-5.2f [ms] %-10s %-5.2f%\n", "Layer 10 time:", l10_time, "Ratio:", (l10_time/sum_l)*100, "kernel:", l10_ktime, "kRatio:", (l10_ktime/sum_kl)*100);
     printf("\n");
-    printf("%-15s %.2f [s]\n%-15s %.2f [s]\n", "Total time:", sum_l, "Total ktime:", sum_kl);
+    printf("%-15s %.2f [ms]\n%-15s %.2f [ms]\n", "Total time:", sum_l, "Total ktime:", sum_kl);
 
     return 0;
 }

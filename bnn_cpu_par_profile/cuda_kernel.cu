@@ -2560,9 +2560,9 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     
     // prepare for kernel call
     // declare storage on device
-    unsigned char *d_cuda_layer_0_output; // storage on device for cuda_layer_0_output
-    const float *d_layer_1_bias; // storage on device for layer_1_bias
-    const signed char *d_cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
+    unsigned char *d_cuda_layer_0_output = (unsigned char *) cuda_layer_0_output; // storage on device for cuda_layer_0_output
+    const float *d_layer_1_bias = (float *) layer_1_bias; // storage on device for layer_1_bias
+    const signed char *d_cuda_layer_1_weight = (signed char *) cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
     float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
 
     // cudaEvent_t startm, stopm;
@@ -2599,9 +2599,9 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     // cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*784*sizeof(unsigned char)), cudaMemcpyHostToDevice);
     // cudaMemcpy(d_layer_1_bias, layer_1_bias, (64*sizeof(float)), cudaMemcpyHostToDevice);
     // cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (576*sizeof(signed char)), cudaMemcpyHostToDevice);
-    d_cuda_layer_0_output = cuda_layer_0_output;
-    d_layer_1_bias = layer_1_bias;
-    d_cuda_layer_1_weight = cuda_layer_1_weight;
+    // d_cuda_layer_0_output = cuda_layer_0_output;
+    // d_layer_1_bias = layer_1_bias;
+    // d_cuda_layer_1_weight = cuda_layer_1_weight;
     cudaCheckErrors("CUDA memcpy failure");
     end1 = std::chrono::high_resolution_clock::now();
     auto cpy_time1 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());

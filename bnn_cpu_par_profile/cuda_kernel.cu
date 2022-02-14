@@ -2695,14 +2695,14 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     */
     // float sum = 0;
     // ofstream g("layer_1_par.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*50176;i<(b+1)*50176;i++){
-    //         sum += cuda_layer_1_output[i];
-    //         g<<cuda_layer_1_output[i]<<" ";  
-    //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*50176;i<(b+1)*50176;i++){
+            sum += cuda_layer_1_output[i];
+            g<<cuda_layer_1_output[i]<<" ";  
+        }
+        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
     return milliseconds; //make_tuple(milliseconds, malloc_time, cpy_time);
 }
 

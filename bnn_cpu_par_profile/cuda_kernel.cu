@@ -2566,7 +2566,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
     std::cout<<cuda_layer_0_output[0]<<" "<<layer_1_bias[0]<<" "<<cuda_layer_1_weight[0]<<" "<<cuda_layer_1_output[0]<<std::endl;
     // std::cout<<d_cuda_layer_0_output[0]<<" "<<d_layer_1_bias[0]<<" "<<d_cuda_layer_1_weight[0]<<std::endl;
-    // std::cout<<std::endl;
+    std::cout<<std::endl;
     
 
     // cudaEvent_t startm, stopm;
@@ -2581,10 +2581,10 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     // cudaMalloc((void **) &d_layer_1_bias, 64*sizeof(float)); // 64 = dim of layer_1_bias
     // cudaMalloc((void **) &d_cuda_layer_1_weight, 576*sizeof(signed char)); // 576 = 3x3x1x64 dim of layer_1_weight
     // cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
-    cudaMallocManaged((void **) &d_cuda_layer_0_output, BATCH_SIZE*784*sizeof(unsigned char)); // 784 = 28x28 dim of cuda_layer_0_output
-    cudaMallocManaged((void **) &d_layer_1_bias, 64*sizeof(float)); // 64 = dim of layer_1_bias
-    cudaMallocManaged((void **) &d_cuda_layer_1_weight, 576*sizeof(signed char)); // 576 = 3x3x1x64 dim of layer_1_weight
-    cudaMallocManaged((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
+    cudaMallocManaged(&d_cuda_layer_0_output, BATCH_SIZE*784*sizeof(unsigned char)); // 784 = 28x28 dim of cuda_layer_0_output
+    cudaMallocManaged(&d_layer_1_bias, 64*sizeof(float)); // 64 = dim of layer_1_bias
+    cudaMallocManaged(&d_cuda_layer_1_weight, 576*sizeof(signed char)); // 576 = 3x3x1x64 dim of layer_1_weight
+    cudaMallocManaged(&d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
     cudaCheckErrors("Failed to allocate device buffer");
     // cudaEventRecord(stopm);
     // auto end1 = std::chrono::high_resolution_clock::now();

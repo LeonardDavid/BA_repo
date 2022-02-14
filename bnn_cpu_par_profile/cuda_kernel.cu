@@ -2512,7 +2512,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, const f
     if(tid < N){
         if(b<BATCH_SIZE){
             if(m<NR_NEURONS) {
-                float aa = d_layer_1_bias[m];
+                // float aa = d_layer_1_bias[m];
                 float bb = d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)];
             }
         }

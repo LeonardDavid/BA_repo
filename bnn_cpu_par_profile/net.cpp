@@ -17,10 +17,9 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   /* Layer 1 GPU */
   
   auto start = std::chrono::high_resolution_clock::now();
-  // float a,b,c;
-  // std::tie(a,b,c) = layer1_conv(x, cuda_layer_1_output);
-  // kernel_time += a; malloc_time += b, cpy_time += c;
-  kernel_time += layer1_conv(x, cuda_layer_1_output);
+  float a,b,c;
+  std::tie(a,b,c) = layer1_conv(x, cuda_layer_1_output);
+  kernel_time += a; malloc_time += b, cpy_time += c;
   auto end = std::chrono::high_resolution_clock::now();
   auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
   float l1_kernel_time = kernel_time;

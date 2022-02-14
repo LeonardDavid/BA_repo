@@ -2564,6 +2564,10 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     const float *d_layer_1_bias = (float *) layer_1_bias; // storage on device for layer_1_bias
     const signed char *d_cuda_layer_1_weight = (signed char *) cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
     float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
+    std::cout<<cuda_layer_0_output[0]<<" "<<layer_1_bias[0]<<" "<<cuda_layer_1_weight[0]<<" "<<cuda_layer_1_output[0]<<std::endl;
+    std::cout<<d_cuda_layer_0_output[0]<<" "<<d_layer_1_bias[0]<<" "<<d_cuda_layer_1_weight[0]<<" "<<d_cuda_layer_1_output[0]<<std::endl;
+    std::cout<<std::endl;
+    
 
     // cudaEvent_t startm, stopm;
     // cudaEventCreate(&startm);
@@ -2571,7 +2575,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     // float milliseconds_m = 0;
 
     // allocate GPU device buffers
-    auto start1 = std::chrono::high_resolution_clock::now();
+    // auto start1 = std::chrono::high_resolution_clock::now();
     // cudaEventRecord(startm);
     // cudaMalloc((void **) &d_cuda_layer_0_output, BATCH_SIZE*784*sizeof(unsigned char)); // 784 = 28x28 dim of cuda_layer_0_output
     // cudaMalloc((void **) &d_layer_1_bias, 64*sizeof(float)); // 64 = dim of layer_1_bias
@@ -2583,8 +2587,12 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     cudaMallocManaged((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
     cudaCheckErrors("Failed to allocate device buffer");
     // cudaEventRecord(stopm);
-    auto end1 = std::chrono::high_resolution_clock::now();
-    auto malloc_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
+    // auto end1 = std::chrono::high_resolution_clock::now();
+    // auto malloc_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
+
+    std::cout<<cuda_layer_0_output[0]<<" "<<layer_1_bias[0]<<" "<<cuda_layer_1_weight[0]<<" "<<cuda_layer_1_output[0]<<std::endl;
+    std::cout<<d_cuda_layer_0_output[0]<<" "<<d_layer_1_bias[0]<<" "<<d_cuda_layer_1_weight[0]<<" "<<d_cuda_layer_1_output[0]<<std::endl;
+    std::cout<<std::endl;
 
     // synchronize threads
     // cudaDeviceSynchronize();
@@ -2595,7 +2603,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     // printf("after: %d KB free of total %d KB\n",free/1024,total/1024);
 
     // copy input data from host on device
-    start1 = std::chrono::high_resolution_clock::now();
+    // start1 = std::chrono::high_resolution_clock::now();
     // cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*784*sizeof(unsigned char)), cudaMemcpyHostToDevice);
     // cudaMemcpy(d_layer_1_bias, layer_1_bias, (64*sizeof(float)), cudaMemcpyHostToDevice);
     // cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (576*sizeof(signed char)), cudaMemcpyHostToDevice);
@@ -2603,8 +2611,8 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     // d_layer_1_bias = layer_1_bias;
     // d_cuda_layer_1_weight = cuda_layer_1_weight;
     cudaCheckErrors("CUDA memcpy failure");
-    end1 = std::chrono::high_resolution_clock::now();
-    auto cpy_time1 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
+    // end1 = std::chrono::high_resolution_clock::now();
+    // auto cpy_time1 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
 
     // define thread and block sizes
     // const int dataxsize = 28;
@@ -2635,9 +2643,13 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     cudaDeviceSynchronize();
     // cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
-    
+
+    std::cout<<cuda_layer_0_output[0]<<" "<<layer_1_bias[0]<<" "<<cuda_layer_1_weight[0]<<" "<<cuda_layer_1_output[0]<<std::endl;
+    std::cout<<d_cuda_layer_0_output[0]<<" "<<d_layer_1_bias[0]<<" "<<d_cuda_layer_1_weight[0]<<" "<<d_cuda_layer_1_output[0]<<std::endl;
+    std::cout<<std::endl;
+
     // copy result from device to host
-    start1 = std::chrono::high_resolution_clock::now();
+    // start1 = std::chrono::high_resolution_clock::now();
     // cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (BATCH_SIZE*50176*sizeof(float)), cudaMemcpyDeviceToHost);
     float sum = 0;
     ofstream g("layer_1_par.out");
@@ -2651,9 +2663,13 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ //
     }
     cuda_layer_1_output = d_cuda_layer_1_output;
     cudaCheckErrors("CUDA memcpy failure");
-    end1 = std::chrono::high_resolution_clock::now();
-    auto cpy_time2 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
-    auto cpy_time = cpy_time1 + cpy_time2;
+    // end1 = std::chrono::high_resolution_clock::now();
+    // auto cpy_time2 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
+    // auto cpy_time = cpy_time1 + cpy_time2;
+
+    std::cout<<cuda_layer_0_output[0]<<" "<<layer_1_bias[0]<<" "<<cuda_layer_1_weight[0]<<" "<<cuda_layer_1_output[0]<<std::endl;
+    std::cout<<d_cuda_layer_0_output[0]<<" "<<d_layer_1_bias[0]<<" "<<d_cuda_layer_1_weight[0]<<" "<<d_cuda_layer_1_output[0]<<std::endl;
+    std::cout<<std::endl;
 
     // free the memory
     cudaFree(d_cuda_layer_0_output);

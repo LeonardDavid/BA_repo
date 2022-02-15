@@ -1,7 +1,6 @@
 #include "net.hpp"
 #include "netW.hpp"
 #include<algorithm>
-#include <iostream>
 
 static float layer_1_output[32][32][128];
 static unsigned long long layer_2_output[32][32][2];
@@ -21,8 +20,6 @@ static unsigned long long layer_15_output[4][4][8];
 static float layer_17_output[1024];
 static unsigned long long layer_18_output[16];
 static float layer_19_output[10];
-
-using namespace std;
 
   void predict_NeuralNet(unsigned char x[][32][3], float * pred) {
 		//unsigned char (*layer_0_output)[32][3] = (unsigned char (*)[32][3]) x;
@@ -50,21 +47,6 @@ using namespace std;
           }
         }
       }
-
-      float sum_cpu = 0;
-      // ofstream g("layer1/orig.out");
-      // for(int b=0;b<BATCH_SIZE;b++){
-          // sum_cpu = 0;
-          for (int h = 0; h < 32; h++) {
-            for (int w = 0; w < 32; w++) {
-              for (int m = 0; m < 128; m++) {
-                sum_cpu += layer_1_output[h][w][m];
-                // g<<layer_1_output[b][h][w][m]<<" ";  
-              }
-            }
-          }
-          cout<<fixed<<"batch 0"<<": "<<sum_cpu<<endl;
-      // }
 
       // Layer 2: Step
       for (int h = 0; h < 32; h++) {

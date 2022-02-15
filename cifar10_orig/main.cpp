@@ -1,7 +1,6 @@
 #include <iostream>
 #include <chrono>
 #include <algorithm>
-#include <fstream>
 
 #include "cifar_reader/cifar10_reader.hpp"
 #ifdef BINARY
@@ -14,7 +13,7 @@
 #define INPUT_FEATURE float
 #include "net.hpp"
 #endif
-using namespace std;
+
 auto benchmark(bool verbose = false) {
 #if defined BINARY || defined INT16
     int output[10] = {0};
@@ -29,7 +28,7 @@ auto benchmark(bool verbose = false) {
     unsigned char img[32][32][3];
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 10; i+=factor) {
+    for (int i = 0; i < test_images.size(); i+=factor) {
       for (int j = 0; j < test_images[i].size(); j++) {
         int d3 = j / 1024;
         int minus = j % 1024;
@@ -40,34 +39,7 @@ auto benchmark(bool verbose = false) {
       std::fill(output, output+10, 0);
       int label = static_cast<int>(test_labels[i]);
 
-        // display img array
-        ofstream g("original_img.out");
-        // for(int b=0;b<BATCH_SIZE;b++){
-            for(int c=0;c<3;c++){
-                g<<"batch: 0"<<", label: "<<label<<", channel: "<<c<<endl;
-                // printf("batch: %d, label: %d, channel: %d\n",b,label,c);
-                for (int i = 0; i < 32; i++)
-                {
-                    for (int j = 0; j < 32; j++)
-                    {
-                        g<<int(img[i][j][c])<<" ";
-                        // printf("%d ", img[i][j][c]);
-                    }
-                    g<<endl;
-                    // printf("\n");
-                }
-                g<<endl<<endl;
-                // printf("\n\n");
-            }
-        // }
-
       predict_NeuralNet(img, output);
-      
-      cout<<i<<"(outp): ";
-        for(int i=0;i<10;i++){
-            cout<<output[i]<<", ";
-        }
-        printf("\n");
       float max = output[0];
       int argmax = 0;
       for (int j = 1; j < 10; j++) {
@@ -76,7 +48,7 @@ auto benchmark(bool verbose = false) {
               argmax = j;
           }
       }
-        std::cout<<i<<": "<<argmax<<"=="<<label<<std::endl;
+
       if (argmax == label) {
           matches++;
       }
@@ -88,7 +60,7 @@ auto benchmark(bool verbose = false) {
   }
 
 int main() {
-    // benchmark();
+    benchmark();
     auto results = benchmark();
     std::cout << "Accuracy: " << results.first << " %" << std::endl;
     std::cout << "Latency: " << results.second << " [ms/elem]" << std::endl;

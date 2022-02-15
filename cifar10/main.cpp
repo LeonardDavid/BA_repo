@@ -96,8 +96,13 @@ auto benchmark(bool verbose = false) {
         //         // printf("\n\n");
         //     }
         // }
-
+        // cout<<i<<"(pred): ";
         total_kernel_time += predict_NeuralNet(img, output);
+        // cout<<i<<"(outp): ";
+        // for(int i=0;i<10;i++){
+        //     cout<<output[i]<<", ";
+        // }
+        // printf("\n");
 
         for(int b = 0; b < BATCH_SIZE; b++){
             float max = output[b*OUT_SIZE];
@@ -108,11 +113,12 @@ auto benchmark(bool verbose = false) {
                     argmax = j;
                 }
             }
-
             if (argmax == label[b]) {
+                cout<<matches[b]<<": "<<argmax<<"=="<<label[b]<<endl;
                 matches[b]++;
             }
         }
+        // printf("\n\n");
     }
     end = std::chrono::high_resolution_clock::now();
     

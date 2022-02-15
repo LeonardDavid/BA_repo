@@ -63,7 +63,7 @@ auto benchmark(bool verbose = false) {
     int label[BATCH_SIZE];
 
     start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < tsize; i+=factor) { // tsize
+    for (int i = 0; i < 1; i+=factor) { // tsize
 
         for(int b = 0; b < BATCH_SIZE; b++){
             for (int j = 0; j < test_images[b][i].size(); j++) { // DO NOT USE tsize HERE! CRUICAL!

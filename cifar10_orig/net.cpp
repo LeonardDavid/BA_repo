@@ -1,6 +1,9 @@
 #include "net.hpp"
 #include "netW.hpp"
-#include<algorithm>
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+using namespace std;
 
 static float layer_1_output[32][32][128];
 static unsigned long long layer_2_output[32][32][2];
@@ -47,6 +50,20 @@ static float layer_19_output[10];
           }
         }
       }
+
+      float sum_cpu = 0;
+      ofstream g("layer1/orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 32; h++) {
+        for (int w = 0; w < 32; w++) {
+          for (int m = 0; m < 128; m++) {
+            sum_cpu += layer_1_output[b][h][w][m];
+            g<<layer_1_output[b][h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 1: "<<sum_cpu<<endl;
+      
 
       // Layer 2: Step
       for (int h = 0; h < 32; h++) {

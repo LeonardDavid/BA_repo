@@ -70,7 +70,7 @@ float layer1_conv_cuda(unsigned char x[][32][32][3], float * cuda_layer_1_output
     setUniGPU();// use the second GPU on Uni-server because the first is used most of the time
 
     // initialize layer_0_output where x is the input image
-    unsigned char (*layer_0_output)[32][32][3] = (unsigned char (*)[32][32][3]) x;
+    unsigned char (*layer_0_output)[BATCH_SIZE][32][32][3] = (unsigned char (*)[BATCH_SIZE][32][32][3]) x;
 
     // flatten 3D -> 1D arrays
     // flatten layer_1_weight

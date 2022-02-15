@@ -80,7 +80,7 @@ auto benchmark(bool verbose = false) {
         // ofstream g("original_img_1.out");
         // for(int b=0;b<BATCH_SIZE;b++){
         //     for(int c=0;c<NR_CHANNELS;c++){
-        //         g<<"batch: "<<b<<", label: "<<label<<", channel: "<<c<<endl;
+        //         g<<"batch: "<<b<<", label: "<<label[b]<<", channel: "<<c<<endl;
         //         // printf("batch: %d, label: %d, channel: %d\n",b,label,c);
         //         for (int i = 0; i < 32; i++)
         //         {

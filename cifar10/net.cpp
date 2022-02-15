@@ -16,30 +16,30 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) {
     float kernel_time = 0;
 
     // Layer 1: Conv @ cpp.NHWC {% else %} /{% if pads == [0, 0, 0, 0] %}
-    for (int b = 0; b < BATCH_SIZE; b++){
-      for (int h = 0; h < 32; h++) {
-        for (int w = 0; w < 32; w++) {
-          for (int m = 0; m < 128; m++) {
-            layer_1_output[b][h][w][m] = layer_1_bias[m];
-          }
-          for (int kH = 0; kH < 3; kH++) {
-            int iH = h * 1 + kH - 1;
-            if (iH >= 0 && iH < 32) {
-              for (int kW = 0; kW < 3; kW++) {
-                int iW = w * 1 + kW - 1;
-                if (iW >= 0 && iW < 32) {
-                  for (int c = 0; c < 3; c++) {
-                    for (int m = 0; m < 128; m++) {
-                      layer_1_output[b][h][w][m] += layer_1_weight[kH][kW][c][m] * x[b][iH][iW][c];
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
+    // for (int b = 0; b < BATCH_SIZE; b++){
+    //   for (int h = 0; h < 32; h++) {
+    //     for (int w = 0; w < 32; w++) {
+    //       for (int m = 0; m < 128; m++) {
+    //         layer_1_output[b][h][w][m] = layer_1_bias[m];
+    //       }
+    //       for (int kH = 0; kH < 3; kH++) {
+    //         int iH = h * 1 + kH - 1;
+    //         if (iH >= 0 && iH < 32) {
+    //           for (int kW = 0; kW < 3; kW++) {
+    //             int iW = w * 1 + kW - 1;
+    //             if (iW >= 0 && iW < 32) {
+    //               for (int c = 0; c < 3; c++) {
+    //                 for (int m = 0; m < 128; m++) {
+    //                   layer_1_output[b][h][w][m] += layer_1_weight[kH][kW][c][m] * x[b][iH][iW][c];
+    //                 }
+    //               }
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
 
     // float sum_cpu = 0;
     // ofstream g("layer1/orig.out");
@@ -56,7 +56,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) {
     //     cout<<fixed<<"batch "<<b<<": "<<sum_cpu<<endl;
     // }
 
-    // kernel_time += layer1_conv(x, cuda_layer_1_output);
+    kernel_time += layer1_conv(x, cuda_layer_1_output);
 
     // float sum_gpu = 0;
     // ofstream gg("layer1/par.out");

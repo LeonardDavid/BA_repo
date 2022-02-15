@@ -10,7 +10,7 @@
 
 using namespace std;
 
-float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) {
+float predict_NeuralNet(unsigned char * const x, float * pred) {
   //unsigned char (*layer_0_output)[32][3] = (unsigned char (*)[32][3]) x;
 
     float kernel_time = 0;
@@ -30,7 +30,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) {
     //             if (iW >= 0 && iW < 32) {
     //               for (int c = 0; c < 3; c++) {
     //                 for (int m = 0; m < 128; m++) {
-    //                   layer_1_output[b][h][w][m] += layer_1_weight[kH][kW][c][m] * x[b][iH][iW][c];
+    //                   layer_1_output[b][h][w][m] += layer_1_weight[kH][kW][c][m] * x[index4D(b,iH,iW,c,32,32,3)];
     //                 }
     //               }
     //             }
@@ -74,7 +74,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) {
       for (int h = 0; h < 32; h++) {
         for (int w = 0; w < 32; w++) {
           for (int c = 0; c < 128; c++) {
-            if (cuda_layer_1_output[index4D(b,h,w,c,32,32,128)] > layer_2_threshold[c]) { // layer_1_output[b][h][w][c] , cuda_layer_1_output[idnex4D(b,h,w,c,32,32,128)]
+            if (cuda_layer_1_output[index4D(b,h,w,c,32,32,128)] > layer_2_threshold[c]) { // layer_1_output[b][h][w][c] , cuda_layer_1_output[index4D(b,h,w,c,32,32,128)]
               layer_2_output[h][w][c / 64] |= (1ULL << (63 - c % 64));
             } else {
               layer_2_output[h][w][c / 64] &= ~(1ULL << (63 - c % 64));

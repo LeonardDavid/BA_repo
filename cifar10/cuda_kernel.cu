@@ -65,7 +65,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     }
 }
 
-float layer1_conv_cuda(unsigned char x[][32][32][3], float * cuda_layer_1_output){
+float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     
     setUniGPU();// use the second GPU on Uni-server because the first is used most of the time
 

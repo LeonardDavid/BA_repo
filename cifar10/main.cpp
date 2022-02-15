@@ -1,8 +1,8 @@
-/*
-    I believe these args were used in generating the code:
-    --base-implementation: cpp.NHWC
-    --implementation: cpp.binary
-*/
+// /*
+//     I believe these args were used in generating the code:
+//     --base-implementation: cpp.NHWC
+//     --implementation: cpp.binary
+// */
 
 #include <iostream>
 #include <chrono>
@@ -27,9 +27,9 @@ using namespace std;
 
 auto benchmark(bool verbose = false) {
 #if defined BINARY || defined INT16
-    int output[BATCH_SIZE*OUT_SIZE] = {0};
+    int output[10] = {0};
 #else
-    float output[BATCH_SIZE*OUT_SIZE] = {0};
+    float output[10] = {0};
 #endif
 
     // load batches in a vector
@@ -57,22 +57,24 @@ auto benchmark(bool verbose = false) {
 
     float total_kernel_time = 0;
 
-    unsigned char img[BATCH_SIZE][32][32][3];
+    // unsigned char img[BATCH_SIZE][32][32][3];
+    unsigned char * img;
+    img = (unsigned char*) malloc (BATCH_SIZE*imgsize*NR_CHANNELS);
     int label[BATCH_SIZE];
 
     start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < tsize; i+=factor) {
-
-        std::fill(output, output+OUT_SIZE*BATCH_SIZE, 0);
+    for (int i = 0; i < tsize; i+=factor) { // tsize
 
         for(int b = 0; b < BATCH_SIZE; b++){
-            for (int j = 0; j < tsize; j++) {
+            for (int j = 0; j < test_images[b][i].size(); j++) { // DO NOT USE tsize HERE! CRUICAL!
                 int d3 = j / 1024;
                 int minus = j % 1024;
                 int d2 = minus % 32;
                 int d1 = minus / 32;
-                img[b][d1][d2][d3] = static_cast<unsigned char>(test_images[b][i][j]);
+                img[index4D(b,d1,d2,d3,32,32,3)] = static_cast<unsigned char>(test_images[b][i][j]);
             }
+            
+            std::fill(output, output+OUT_SIZE*BATCH_SIZE, 0);
             label[b] = static_cast<int>(test_labels[b][i]);
         }
 
@@ -86,7 +88,7 @@ auto benchmark(bool verbose = false) {
         //         {
         //             for (int j = 0; j < 32; j++)
         //             {
-        //                 g<<int(img[b][i][j][c])<<" ";
+        //                 g<<int(img[index4D(b,i,j,c,32,32,3)])<<" ";
         //                 // printf("%d ", img[i][j][c]);
         //             }
         //             g<<endl;
@@ -96,6 +98,7 @@ auto benchmark(bool verbose = false) {
         //         // printf("\n\n");
         //     }
         // }
+
         // cout<<i<<"(pred): ";
         total_kernel_time += predict_NeuralNet(img, output);
         // cout<<i<<"(outp): ";
@@ -113,8 +116,9 @@ auto benchmark(bool verbose = false) {
                     argmax = j;
                 }
             }
+            // cout<<i<<": "<<argmax<<"=="<<label[b]<<endl;
             if (argmax == label[b]) {
-                cout<<matches[b]<<": "<<argmax<<"=="<<label[b]<<endl;
+                // cout<<matches[b]<<": "<<argmax<<"=="<<label[b]<<endl;
                 matches[b]++;
             }
         }

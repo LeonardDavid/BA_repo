@@ -28,7 +28,7 @@ auto benchmark(bool verbose = false) {
     unsigned char img[32][32][3];
 
     auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < test_images.size(); i+=factor) {
+    for (int i = 0; i < 1; i+=factor) {
       for (int j = 0; j < test_images[i].size(); j++) {
         int d3 = j / 1024;
         int minus = j % 1024;
@@ -60,7 +60,7 @@ auto benchmark(bool verbose = false) {
   }
 
 int main() {
-    benchmark();
+    // benchmark();
     auto results = benchmark();
     std::cout << "Accuracy: " << results.first << " %" << std::endl;
     std::cout << "Latency: " << results.second << " [ms/elem]" << std::endl;

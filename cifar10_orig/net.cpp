@@ -52,13 +52,13 @@ static float layer_19_output[10];
       }
 
       float sum_cpu = 0;
-      ofstream g("layer1/orig.out");
+      ofstream g("layer1_orig.out");
       sum_cpu = 0;
       for (int h = 0; h < 32; h++) {
         for (int w = 0; w < 32; w++) {
           for (int m = 0; m < 128; m++) {
-            sum_cpu += layer_1_output[b][h][w][m];
-            g<<layer_1_output[b][h][w][m]<<" ";  
+            sum_cpu += layer_1_output[h][w][m];
+            g<<layer_1_output[h][w][m]<<" ";  
           }
         }
       }
@@ -102,6 +102,18 @@ static float layer_19_output[10];
         }
       }
 
+      ofstream g3("layer3_orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 32; h++) {
+        for (int w = 0; w < 32; w++) {
+          for (int m = 0; m < 128; m++) {
+            sum_cpu += layer_3_output[h][w][m];
+            g3<<layer_3_output[h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 3: "<<sum_cpu<<endl;
+
       // // Layer 4: MaxPool
       // for (int h = 0; h < 16; h++) {
       //   for (int w = 0; w < 16; w++) {
@@ -131,6 +143,18 @@ static float layer_19_output[10];
           }
         }
       }
+
+      ofstream g4("layer4_orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 16; h++) {
+        for (int w = 0; w < 16; w++) {
+          for (int m = 0; m < 128; m++) {
+            sum_cpu += layer_4_output[h][w][m];
+            g4<<layer_4_output[h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 4: "<<sum_cpu<<endl;
 
       // Layer 5: Step
       for (int h = 0; h < 16; h++) {
@@ -168,6 +192,17 @@ static float layer_19_output[10];
           }
         }
       }
+      ofstream g6("layer6_orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 16; h++) {
+        for (int w = 0; w < 16; w++) {
+          for (int m = 0; m < 256; m++) {
+            sum_cpu += layer_6_output[h][w][m];
+            g6<<layer_6_output[h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 6: "<<sum_cpu<<endl;
 
       // Layer 7: Step
       for (int h = 0; h < 16; h++) {
@@ -205,6 +240,17 @@ static float layer_19_output[10];
           }
         }
       }
+      ofstream g8("layer8_orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 16; h++) {
+        for (int w = 0; w < 16; w++) {
+          for (int m = 0; m < 256; m++) {
+            sum_cpu += layer_8_output[h][w][m];
+            g8<<layer_8_output[h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 8: "<<sum_cpu<<endl;
 
       // Layer 9: MaxPool
       for (int h = 0; h < 8; h++) {
@@ -221,6 +267,17 @@ static float layer_19_output[10];
           }
         }
       }
+      ofstream g9("layer9_orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 8; h++) {
+        for (int w = 0; w < 8; w++) {
+          for (int m = 0; m < 256; m++) {
+            sum_cpu += layer_9_output[h][w][m];
+            g9<<layer_9_output[h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 9: "<<sum_cpu<<endl;
 
       // Layer 10: Step
       for (int h = 0; h < 8; h++) {
@@ -258,6 +315,17 @@ static float layer_19_output[10];
           }
         }
       }
+      ofstream g11("layer11_orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 8; h++) {
+        for (int w = 0; w < 8; w++) {
+          for (int m = 0; m < 512; m++) {
+            sum_cpu += layer_11_output[h][w][m];
+            g11<<layer_11_output[h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 11: "<<sum_cpu<<endl;
 
       // Layer 12: Step
       for (int h = 0; h < 8; h++) {
@@ -295,6 +363,17 @@ static float layer_19_output[10];
           }
         }
       }
+      ofstream g13("layer13_orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 8; h++) {
+        for (int w = 0; w < 8; w++) {
+          for (int m = 0; m < 512; m++) {
+            sum_cpu += layer_13_output[h][w][m];
+            g13<<layer_13_output[h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 13: "<<sum_cpu<<endl;
 
       // Layer 14: MaxPool
       for (int h = 0; h < 4; h++) {
@@ -311,6 +390,18 @@ static float layer_19_output[10];
           }
         }
       }
+
+      ofstream g14("layer14_orig.out");
+      sum_cpu = 0;
+      for (int h = 0; h < 4; h++) {
+        for (int w = 0; w < 4; w++) {
+          for (int m = 0; m < 512; m++) {
+            sum_cpu += layer_14_output[h][w][m];
+            g14<<layer_14_output[h][w][m]<<" ";  
+          }
+        }
+      }
+      cout<<fixed<<"layer 14: "<<sum_cpu<<endl;
 
       // Layer 15: Step
       for (int h = 0; h < 4; h++) {
@@ -337,6 +428,13 @@ static float layer_19_output[10];
           layer_17_output[d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ layer_16_output[i])) - 64;
         }
       }
+      ofstream g17("layer17_orig.out");
+      sum_cpu = 0;
+      for (int d = 0; d < 1024; d++) {
+          sum_cpu += layer_17_output[d];
+          g17<<layer_17_output[d]<<" ";  
+      }
+      cout<<fixed<<"layer 17: "<<sum_cpu<<endl;
 
       // Layer 18: Step
       for (int d = 0; d < 1024; d++) {
@@ -356,6 +454,14 @@ static float layer_19_output[10];
           layer_19_output[d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_19_weight[d][i] ^ layer_18_output[i])) - 64;
         }
       }
+
+      ofstream g19("layer19_orig.out");
+      sum_cpu = 0;
+      for (int d = 0; d < 10; d++) {
+          sum_cpu += layer_19_output[d];
+          g19<<layer_19_output[d]<<" ";  
+      }
+      cout<<fixed<<"layer 19: "<<sum_cpu<<endl;
 
     for (int i = 0; i < 10; i++) {
       pred[i] += layer_19_output[i];

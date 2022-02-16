@@ -194,7 +194,7 @@ __global__ void layer3_conv_kernel(unsigned long long *d_cuda_layer_2_output, fl
                         if(b < BATCH_SIZE){
                             for (int c = 0; c < 2; c++) {
                                 if(m < 128) {
-                                    d_cuda_layer_3_output[index4D_cuda(b,h,w,m,32,32,128)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_3_weight[index4D_cuda(kH,kW,m,c,3,128,2)] ^ d_cuda_layer_2_output[index4D_cuda(b,iH,iW,c,32,32,2)])) - 64; // ,128?
+                                    d_cuda_layer_3_output[index4D_cuda(b,h,w,m,32,32,128)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_3_weight[index4D_cuda(kH,kW,m,c,3,128,2)] ^ d_cuda_layer_2_output[index4D_cuda(b,iH,iW,c,32,32,128)])) - 64; // ,128?
                                 }
                             }
                         }

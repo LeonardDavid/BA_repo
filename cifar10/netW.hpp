@@ -4,7 +4,7 @@ static float layer_1_output[BATCH_SIZE][32][32][128];
 static float cuda_layer_1_output[BATCH_SIZE*32*32*128];
 
 static unsigned long long layer_2_output[BATCH_SIZE][32][32][2];
-// static unsigned long long cuda_layer_2_output[BATCH_SIZE*32*32*2*64]; //x64 necessary
+static unsigned long long cuda_layer_2_output[BATCH_SIZE*32*32*2*64]; //x64 necessary
 
 static float layer_3_output[BATCH_SIZE][32][32][128];
 static float cuda_layer_3_output[BATCH_SIZE*32*32*128];

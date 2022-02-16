@@ -88,7 +88,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     }
   }
 
-  unsigned long long *cuda_layer_2_output = (unsigned long long *) layer_2_output;
+  // unsigned long long *cuda_layer_2_output = (unsigned long long *) layer_2_output;
+  // ^ direct pointer assignment leads to segmentation fault ^
+  for (int b = 0; b < BATCH_SIZE; b++){
+    for (int h = 0; h < 32; h++) {
+      for (int w = 0; w < 32; w++) {
+        for (int c = 0; c < 128; c++) {
+          cuda_layer_2_output[index4D(b,h,w,c,32,32,128)] = layer_2_output[b][h][w][c];
+        }
+      }
+    }
+  }
 
   /* Layer 3 CPU */
   // Layer 3: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
@@ -157,7 +167,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
         for (int kH = 0; kH < 2; kH++) {
           for (int kW = 0; kW < 2; kW++) {
             for (int c = 0; c < 128; c++) {
-              layer_4_output[b][h][w][c] = std::max(layer_3_output[b][h * 2 + kH][w * 2 + kW][c], layer_4_output[b][h][w][c]);
+              layer_4_output[b][h][w][c] = std::max(cuda_layer_3_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,2,2,128)], layer_4_output[b][h][w][c]);
             }
           }
         }

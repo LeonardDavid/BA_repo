@@ -27,9 +27,9 @@ using namespace std;
 
 auto benchmark(bool verbose = false) {
 #if defined BINARY || defined INT16
-    int output[10] = {0};
+    int output[OUT_SIZE*BATCH_SIZE] = {0};
 #else
-    float output[10] = {0};
+    float output[OUT_SIZE*BATCH_SIZE] = {0};
 #endif
 
     // load batches in a vector
@@ -58,12 +58,16 @@ auto benchmark(bool verbose = false) {
     float total_kernel_time = 0;
 
     // unsigned char img[BATCH_SIZE][32][32][3];
-    unsigned char * img;
-    img = (unsigned char*) malloc (BATCH_SIZE*imgsize*NR_CHANNELS);
-    int label[BATCH_SIZE];
+    
 
     start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 1; i+=factor) { // tsize
+
+        int label[BATCH_SIZE];
+        unsigned char img[BATCH_SIZE][32][32][3];
+
+        // unsigned char * img;
+        // img = (unsigned char*) malloc (BATCH_SIZE*imgsize*NR_CHANNELS);
 
         for(int b = 0; b < BATCH_SIZE; b++){
             for (int j = 0; j < test_images[b][i].size(); j++) { // DO NOT USE tsize HERE! CRUICAL!
@@ -71,7 +75,7 @@ auto benchmark(bool verbose = false) {
                 int minus = j % 1024;
                 int d2 = minus % 32;
                 int d1 = minus / 32;
-                img[index4D(b,d1,d2,d3,32,32,3)] = static_cast<unsigned char>(test_images[b][i][j]);
+                img[b][d1][d2][d3] = static_cast<unsigned char>(test_images[b][i][j]); // img[index4D(b,d1,d2,d3,32,32,3)] / img[b][d1][d2][d3]
             }
             
             std::fill(output, output+OUT_SIZE*BATCH_SIZE, 0);
@@ -82,32 +86,38 @@ auto benchmark(bool verbose = false) {
         // ofstream g("original_img_1.out");
         // for(int b=0;b<BATCH_SIZE;b++){
         //     for(int c=0;c<NR_CHANNELS;c++){
-        //         g<<"batch: "<<b<<", label: "<<label[b]<<", channel: "<<c<<endl;
-        //         // printf("batch: %d, label: %d, channel: %d\n",b,label,c);
+        //         // g<<"batch: "<<b<<", label: "<<label[b]<<", channel: "<<c<<endl;
+        //         cout<<"batch: "<<b<<", label: "<<label[b]<<", channel: "<<c<<endl;
         //         for (int i = 0; i < 32; i++)
         //         {
         //             for (int j = 0; j < 32; j++)
         //             {
-        //                 g<<int(img[index4D(b,i,j,c,32,32,3)])<<" ";
-        //                 // printf("%d ", img[i][j][c]);
+        //                 // g<<int(img[index4D(b,i,j,c,32,32,3)])<<" ";
+        //                 // g<<int(img[b][i][j][c])<<" ";
+        //                 // cout<<int(img[index4D(b,i,j,c,32,32,3)])<<" ";
+        //                 cout<<int(img[b][i][j][c])<<" ";
         //             }
-        //             g<<endl;
-        //             // printf("\n");
+        //             // g<<endl;
+        //             cout<<endl;
         //         }
-        //         g<<endl<<endl;
-        //         // printf("\n\n");
+        //         // g<<endl<<endl;
+        //         cout<<endl<<endl;
         //     }
+        //     // g<<endl<<endl<<endl;
+        //     cout<<endl<<endl<<endl;
         // }
 
         // cout<<i<<"(pred): ";
+
         total_kernel_time += predict_NeuralNet(img, output);
+
         // cout<<i<<"(outp): ";
         // for(int i=0;i<10;i++){
         //     cout<<output[i]<<", ";
         // }
         // printf("\n");
 
-        for(int b = 0; b < BATCH_SIZE; b++){
+        for(int b = 0; b < BATCH_SIZE; b++){ 
             float max = output[b*OUT_SIZE];
             int argmax = 0;
             for (int j = 1; j < OUT_SIZE; j++) {

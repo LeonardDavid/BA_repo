@@ -61,7 +61,7 @@ auto benchmark(bool verbose = false) {
     
 
     start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < lsize; i+=factor) { // tsize
+    for (int i = 0; i < tsize; i+=factor) { // tsize
 
         int label[BATCH_SIZE];
         unsigned char img[BATCH_SIZE][32][32][3];

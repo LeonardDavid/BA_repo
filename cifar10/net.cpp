@@ -158,22 +158,22 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
 
   /* Layer 4 CPU */
   // Layer 4: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int h = 0; h < 16; h++) {
-      for (int w = 0; w < 16; w++) {
-        for (int c = 0; c < 128; c++) {
-          layer_4_output[b][h][w][c] = std::numeric_limits<float>::lowest();
-        }
-        for (int kH = 0; kH < 2; kH++) {
-          for (int kW = 0; kW < 2; kW++) {
-            for (int c = 0; c < 128; c++) {
-              layer_4_output[b][h][w][c] = std::max(cuda_layer_3_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,2,2,128)], layer_4_output[b][h][w][c]);
-            }
-          }
-        }
-      }
-    }
-  }
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 16; h++) {
+  //     for (int w = 0; w < 16; w++) {
+  //       for (int c = 0; c < 128; c++) {
+  //         layer_4_output[b][h][w][c] = std::numeric_limits<float>::lowest();
+  //       }
+  //       for (int kH = 0; kH < 2; kH++) {
+  //         for (int kW = 0; kW < 2; kW++) {
+  //           for (int c = 0; c < 128; c++) {
+  //             layer_4_output[b][h][w][c] = std::max(cuda_layer_3_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,32,32,128)], layer_4_output[b][h][w][c]);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // // checksum L4 = 1633936.0
   // ofstream g4("layer4/orig.out");
@@ -191,9 +191,9 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // }
 
   /* Layer 4 GPU */
-  // kernel_time += layer4_maxpool(cuda_layer_3_output, cuda_layer_4_output);
+  kernel_time += layer4_maxpool(cuda_layer_3_output, cuda_layer_4_output);
 
-  // checksum L4 = 1633936.0
+  // // checksum L4 = 1633936.0
   // ofstream gg4("layer4/par.out");
   // for(int b=0;b<BATCH_SIZE;b++){
   //   sum_gpu = 0;
@@ -210,7 +210,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     for (int h = 0; h < 16; h++) {
       for (int w = 0; w < 16; w++) {
         for (int c = 0; c < 128; c++) {
-          if (layer_4_output[b][h][w][c] >layer_5_threshold[c]) {
+          if (cuda_layer_4_output[index4D(b,h,w,c,16,16,128)] >layer_5_threshold[c]) {
             layer_5_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_5_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));

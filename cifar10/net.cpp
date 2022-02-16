@@ -370,10 +370,11 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     pred[i] += layer_19_output[i];
   }
 // printf("20\n");
-  for(int i=0;i<10;i++){
-    cout<<pred[i]<<", ";
-  }
-  printf("\n");
+
+  // for(int i=0;i<10;i++){
+  //   cout<<pred[i]<<", ";
+  // }
+  // printf("\n");
 
   return kernel_time;
 

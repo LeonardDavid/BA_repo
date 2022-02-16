@@ -61,7 +61,7 @@ auto benchmark(bool verbose = false) {
     
 
     start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1; i+=factor) { // tsize
+    for (int i = 0; i < tsize; i+=factor) { // tsize
 
         int label[BATCH_SIZE];
         unsigned char img[BATCH_SIZE][32][32][3];
@@ -107,15 +107,15 @@ auto benchmark(bool verbose = false) {
         //     cout<<endl<<endl<<endl;
         // }
 
-        cout<<i<<"(pred): ";
+        // cout<<i<<"(pred): ";
 
         total_kernel_time += predict_NeuralNet(img, output);
 
-        cout<<i<<"(outp): ";
-        for(int i=0;i<10;i++){
-            cout<<output[i]<<", ";
-        }
-        printf("\n");
+        // cout<<i<<"(outp): ";
+        // for(int i=0;i<10;i++){
+        //     cout<<output[i]<<", ";
+        // }
+        // printf("\n");
 
         for(int b = 0; b < BATCH_SIZE; b++){ 
             float max = output[b*OUT_SIZE];

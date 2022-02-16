@@ -1,7 +1,7 @@
 #include "utils.h"
 
 static float layer_1_output[BATCH_SIZE][32][32][128];
-static float cuda_layer_1_output[BATCH_SIZE*32*32*128];
+static float cuda_layer_1_output[BATCH_SIZE*131072];
 static unsigned long long layer_2_output[32][32][2];
 static float layer_3_output[32][32][128];
 static float layer_4_output[16][16][128];

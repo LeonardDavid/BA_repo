@@ -78,31 +78,27 @@ float layer1_conv_cuda(unsigned char x[][32][32][3], float * cuda_layer_1_output
 
     // flatten layer_0_output
     unsigned char *cuda_layer_0_output = (unsigned char *) layer_0_output;
-// printf("0\n");
+
     // prepare for kernel call
     // declare storage on device
     unsigned char *d_cuda_layer_0_output; // storage on device for cuda_layer_0_output
     float *d_layer_1_bias; // storage on device for layer_1_bias
     signed char *d_cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
     float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
-// printf("1\n");
+
     // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_0_output, BATCH_SIZE*3072*sizeof(unsigned char)); // 3072 = 32x32x3 dim of cuda_layer_0_output
-    // printf("1.1: %lu\n", BATCH_SIZE*3072*sizeof(unsigned char));
+    cudaMalloc((void **) &d_cuda_layer_0_output, BATCH_SIZE*32*32*3*sizeof(unsigned char)); // 3072 = 32x32x3 dim of cuda_layer_0_output
     cudaMalloc((void **) &d_layer_1_bias, 128*sizeof(float)); // 128 = dim of layer_1_bias
-    // printf("1.2: %lu\n", 128*sizeof(float));
-    cudaMalloc((void **) &d_cuda_layer_1_weight, 3456*sizeof(signed char)); // 3456 = 3x3x3x128 dim of layer_1_weight
-    // printf("1.3: %lu\n", 3456*sizeof(signed char));
-    cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*131072*sizeof(float)); // 131072 = 32x32x128 dim of layer_1_output
-    // printf("1.4 :%lu\n", BATCH_SIZE*131072*sizeof(float));
+    cudaMalloc((void **) &d_cuda_layer_1_weight, 3*3*3*128*sizeof(signed char)); // 3456 = 3x3x3x128 dim of layer_1_weight
+    cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*32*32*128*sizeof(float)); // 131072 = 32x32x128 dim of layer_1_output
     cudaCheckErrors("Failed to allocate device buffer");
-// printf("2\n");
+
     // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*3072*sizeof(unsigned char)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*32*32*3*sizeof(unsigned char)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_1_bias, layer_1_bias, (128*sizeof(float)), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (3456*sizeof(signed char)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (3*3*3*128*sizeof(signed char)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
-// printf("3\n");
+
     // define thread and block sizes
     const int BLKXSIZE = 32;
     const int BLKYSIZE = 1;
@@ -118,38 +114,39 @@ float layer1_conv_cuda(unsigned char x[][32][32][3], float * cuda_layer_1_output
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
     float milliseconds = 0;
-// printf("4\n");
+
     // compute result - kernel call
     cudaEventRecord(start);
     layer1_conv_kernel<<<numBlocks,threadsPerBlock>>>(d_cuda_layer_0_output, d_layer_1_bias, d_cuda_layer_1_weight, d_cuda_layer_1_output);
     cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
-// printf("5\n");
+
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
-// printf("6\n");
+
     // copy result from device to host
-    cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (BATCH_SIZE*131072*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (BATCH_SIZE*32*32*128*sizeof(float)), cudaMemcpyDeviceToHost);
     cudaCheckErrors("CUDA memcpy failure");
-// printf("7\n");
+
     // free the memory
     cudaFree(d_cuda_layer_0_output);
     cudaFree(d_layer_1_bias);
     cudaFree(d_cuda_layer_1_weight);
     cudaFree(d_cuda_layer_1_output);
     cudaCheckErrors("cudaFree fail");
-// printf("8\n");
-    // float sum = 0;
-    // ofstream g("layer1/par.out");
+
+    // // checksum L1 = 5720315.5
+    // float sum_gpu = 0;
+    // ofstream gg("layer1/par.out");
     // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*131072;i<(b+1)*131072;i++){
-    //         sum += cuda_layer_1_output[i];
-    //         g<<cuda_layer_1_output[i]<<" ";  
+    //     sum_gpu = 0;
+    //     for(int i=b*32*32*128;i<(b+1)*32*32*128;i++){
+    //         sum_gpu += cuda_layer_1_output[i];
+    //         gg<<cuda_layer_1_output[i]<<" ";  
     //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    //     cout<<fixed<<"batch "<<b<<": "<<sum_gpu<<endl;
     // }
     
     return milliseconds;

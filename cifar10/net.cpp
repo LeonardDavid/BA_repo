@@ -76,7 +76,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
       for (int h = 0; h < 32; h++) {
         for (int w = 0; w < 32; w++) {
           for (int c = 0; c < 128; c++) {
-            if (layer_1_output[b][h][w][c] > layer_2_threshold[c]) { // layer_1_output[b][h][w][c] , cuda_layer_1_output[index4D(b,h,w,c,32,32,128)]
+            if (cuda_layer_1_output[index4D(b,h,w,c,32,32,128)] > layer_2_threshold[c]) { // layer_1_output[b][h][w][c] , cuda_layer_1_output[index4D(b,h,w,c,32,32,128)]
               layer_2_output[h][w][c / 64] |= (1ULL << (63 - c % 64));
             } else {
               layer_2_output[h][w][c / 64] &= ~(1ULL << (63 - c % 64));
@@ -370,10 +370,10 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     pred[i] += layer_19_output[i];
   }
 // printf("20\n");
-  // for(int i=0;i<10;i++){
-  //   cout<<pred[i]<<", ";
-  // }
-  // printf("\n");
+  for(int i=0;i<10;i++){
+    cout<<pred[i]<<", ";
+  }
+  printf("\n");
 
   return kernel_time;
 

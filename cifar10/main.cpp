@@ -57,15 +57,13 @@ auto benchmark(bool verbose = false) {
 
     float total_kernel_time = 0;
 
-    // unsigned char img[BATCH_SIZE][32][32][3];
-    
-
     start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < tsize; i+=factor) { // tsize
 
         int label[BATCH_SIZE];
         unsigned char img[BATCH_SIZE][32][32][3];
 
+        /* leads to stack smashing */
         // unsigned char * img;
         // img = (unsigned char*) malloc (BATCH_SIZE*imgsize*NR_CHANNELS);
 

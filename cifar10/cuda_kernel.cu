@@ -381,11 +381,126 @@ float layer4_maxpool_cuda(float * cuda_layer_3_output, float * cuda_layer_4_outp
     return milliseconds;
 }
 
+__global__ void layer6_conv_kernel(unsigned long long *d_cuda_layer_5_output, float *d_layer_6_bias, unsigned long long *d_cuda_layer_6_weight, float *d_cuda_layer_6_output){
+    
+    int N = 16, kernel_size = 3;
+
+    int tid = threadIdx.x; // = h
+    int bid = blockIdx.y;  // = w
+    int h = tid, w = bid;
+
+    int m = blockIdx.z; // neurons in z-dir
+
+    // batches in x-dir
+    int b = blockIdx.x;
+    //each block is assigned to a row of an image, iy index of y value                  
+    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    //each thread is assigned to a pixel of a row, ix index of x value
+    int ix = threadIdx.x + (kernel_size - 1)/2; 
+    
+    //idx global index (all blocks) of the image pixel 
+    int idx = iy*N +ix;
+
+    // bias is applied to every pixel
+    if(tid < N){
+        if(b < BATCH_SIZE){
+            if(m < 256) {
+                d_cuda_layer_6_output[index4D_cuda(b,h,w,m,16,16,256)] = d_layer_6_bias[m];
+            }
+        }
+    }
+
+    __syncthreads();
+
+    // edge pixels are skipped here because they cannot fit entire convolution window
+    if(idx < N*N){
+        for (int kH = 0; kH < kernel_size; kH++){
+            int iH = h * 1 + kH - 1;
+            if (iH >= 0 && iH < 16) {
+                for (int kW = 0; kW < kernel_size; kW++){
+                    int iW = w * 1 + kW - 1;
+                    if (iW >= 0 && iW < 16) {
+                        if(b < BATCH_SIZE){
+                            for (int c = 0; c < 2; c++) {
+                                if(m < 256) {
+                                    d_cuda_layer_6_output[index4D_cuda(b,h,w,m,16,16,256)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_6_weight[index4D_cuda(kH,kW,m,c,3,256,2)] ^ d_cuda_layer_5_output[index4D_cuda(b,iH,iW,c,16,16,128)])) - 64; // ,128?
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 float layer6_conv_cuda(unsigned long long * cuda_layer_5_output, float * cuda_layer_6_output){
     
     setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
     
-    return 0;
+    // flatten 3D -> 1D arrays
+    // flatten layer_6_weight
+    signed char *cuda_layer_6_weight = (signed char *) layer_6_weight;
+
+    // prepare for kernel call
+    // declare storage on device
+    unsigned long long *d_cuda_layer_5_output; // storage on device for cuda_layer_5_output
+    float *d_layer_6_bias; // storage on device for layer_6_bias
+    unsigned long long *d_cuda_layer_6_weight; // storage on device for cuda_layer_6_weight
+    float *d_cuda_layer_6_output; // RESULT storage on device for cuda_layer_6_output
+
+    // allocate GPU device buffers
+    cudaMalloc((void **) &d_cuda_layer_5_output, BATCH_SIZE*16*16*2*64*sizeof(unsigned long long)); // 32768 = 16x16x2x64 dim of cuda_layer_5_output
+    cudaMalloc((void **) &d_layer_6_bias, 256*sizeof(float)); // 256 = dim of layer_6_bias
+    cudaMalloc((void **) &d_cuda_layer_6_weight, 3*3*256*2*64*sizeof(unsigned long long)); // 294912 = 3x3x256x2x64 dim of layer_6_weight
+    cudaMalloc((void **) &d_cuda_layer_6_output, BATCH_SIZE*16*16*256*sizeof(float)); // 65536 = 16x16x256 dim of layer_6_output
+    cudaCheckErrors("Failed to allocate device buffer");
+
+    // copy input data from host on device
+    cudaMemcpy(d_cuda_layer_5_output, cuda_layer_5_output, (BATCH_SIZE*16*16*2*64*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_layer_6_bias, layer_6_bias, (256*sizeof(float)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_6_weight, cuda_layer_6_weight, (3*3*256*2*64*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaCheckErrors("CUDA memcpy failure");
+
+    // define thread and block sizes
+    const int BLKXSIZE = 16;
+    const int BLKYSIZE = 1;
+    const int GRIDXSIZE = BATCH_SIZE;
+    const int GRIDYSIZE = 16;
+    const int GRIDZSIZE = 256;
+
+    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE);
+    const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
+    
+    // timing of the kernel
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    float milliseconds = 0;
+
+    // compute result - kernel call
+    cudaEventRecord(start);
+    layer6_conv_kernel<<<numBlocks,threadsPerBlock>>>(d_cuda_layer_5_output, d_layer_6_bias, d_cuda_layer_6_weight, d_cuda_layer_6_output);
+    cudaCheckErrors("Kernel launch failure");
+    cudaEventRecord(stop);
+
+    // synchronize threads
+    cudaDeviceSynchronize();
+    cudaCheckErrors("CUDA synchronize failure");
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_6_output, d_cuda_layer_6_output, (BATCH_SIZE*16*16*256*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
+
+    // free the memory
+    cudaFree(d_cuda_layer_5_output);
+    cudaFree(d_layer_6_bias);
+    cudaFree(d_cuda_layer_6_weight);
+    cudaFree(d_cuda_layer_6_output);
+    cudaCheckErrors("cudaFree fail");
+
+    return milliseconds;
 }
 
 float layer8_conv_cuda(unsigned long long * cuda_layer_7_output, float * cuda_layer_8_output){

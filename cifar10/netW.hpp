@@ -13,7 +13,7 @@ static float layer_4_output[BATCH_SIZE][16][16][128];
 static float cuda_layer_4_output[BATCH_SIZE*16*16*128];
 
 static unsigned long long layer_5_output[BATCH_SIZE][16][16][2];
-// static unsigned long long cuda_layer_5_output[BATCH_SIZE*16*16*2*64]; //x64 necessary
+static unsigned long long cuda_layer_5_output[BATCH_SIZE*16*16*2*64]; //x64 necessary
 
 static float layer_6_output[BATCH_SIZE][16][16][256];
 static float cuda_layer_6_output[BATCH_SIZE*16*16*256];

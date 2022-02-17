@@ -220,34 +220,44 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     }
   }
 
-  unsigned long long *cuda_layer_5_output = (unsigned long long *) layer_5_output;
-
-  /* Layer 6 CPU */
-  // Layer 6: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+  // unsigned long long *cuda_layer_5_output = (unsigned long long *) layer_5_output;
+  // ^ direct pointer assignment leads to segmentation fault ^
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int h = 0; h < 16; h++) {
       for (int w = 0; w < 16; w++) {
-        for (int m = 0; m < 256; m++) {
-          layer_6_output[b][h][w][m] = layer_6_bias[m];
-        }
-        for (int kH = 0; kH < 3; kH++) {
-          int iH = h * 1 + kH - 1;
-          if (iH >= 0 && iH < 16) {
-            for (int kW = 0; kW < 3; kW++) {
-              int iW = w * 1 + kW - 1;
-              if (iW >= 0 && iW < 16) {
-                for (int m = 0; m < 256; m++) {
-                  for (int c = 0; c < 2; c++) {
-                    layer_6_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_6_weight[kH][kW][m][c] ^ layer_5_output[b][iH][iW][c])) - 64;
-                  }
-                }
-              }
-            }
-          }
+        for (int c = 0; c < 128; c++) {
+          cuda_layer_5_output[index4D(b,h,w,c,16,16,128)] = layer_5_output[b][h][w][c];
         }
       }
     }
   }
+
+  /* Layer 6 CPU */
+  // Layer 6: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 16; h++) {
+  //     for (int w = 0; w < 16; w++) {
+  //       for (int m = 0; m < 256; m++) {
+  //         layer_6_output[b][h][w][m] = layer_6_bias[m];
+  //       }
+  //       for (int kH = 0; kH < 3; kH++) {
+  //         int iH = h * 1 + kH - 1;
+  //         if (iH >= 0 && iH < 16) {
+  //           for (int kW = 0; kW < 3; kW++) {
+  //             int iW = w * 1 + kW - 1;
+  //             if (iW >= 0 && iW < 16) {
+  //               for (int m = 0; m < 256; m++) {
+  //                 for (int c = 0; c < 2; c++) {
+  //                   layer_6_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_6_weight[kH][kW][m][c] ^ cuda_layer_5_output[index4D(b,iH,iW,c,16,16,128)])) - 64;
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // // checksum L6 = -20699.617188
   // ofstream g6("layer6/orig.out");
@@ -265,9 +275,9 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // }
 
   /* Layer 6 GPU */
-  // kernel_time += layer6_conv(cuda_layer_5_output, cuda_layer_6_output);
+  kernel_time += layer6_conv(cuda_layer_5_output, cuda_layer_6_output);
 
-  // checksum L6 = -20699.617188
+  // // checksum L6 = -20699.617188
   // ofstream gg6("layer6/par.out");
   // for(int b=0;b<BATCH_SIZE;b++){
   //   sum_gpu = 0;
@@ -284,7 +294,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     for (int h = 0; h < 16; h++) {
       for (int w = 0; w < 16; w++) {
         for (int c = 0; c < 256; c++) {
-          if (layer_6_output[b][h][w][c] >layer_7_threshold[c]) {
+          if (cuda_layer_6_output[index4D(b,h,w,c,16,16,256)] >layer_7_threshold[c]) {
             layer_7_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_7_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));

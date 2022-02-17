@@ -1,6 +1,6 @@
 intel:
 	nvcc -g -G -c cuda_kernel.cu
-	g++ -c -g -O0 -Q -w -std=c++14 main.cpp net.cpp -I net.hpp netW.hpp -O3
+	g++ -c -g -w -std=c++14 main.cpp net.cpp -I net.hpp netW.hpp -O3
 ifeq ($(shell hostname), LDB-XPS)
 	g++ -o cifar.o cuda_kernel.o net.o main.o -L/usr/local/cuda/lib64 -lcudart # for LDB-XPS system at home
 else

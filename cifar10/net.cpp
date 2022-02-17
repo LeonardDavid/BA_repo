@@ -361,16 +361,16 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 8 GPU */
   kernel_time += layer8_conv(cuda_layer_7_output, cuda_layer_8_output);
 
-  // checksum L8 = -225414.96875
-  ofstream gg8("layer8/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*16*16*256;i<(b+1)*16*16*256;i++){
-        sum_gpu += cuda_layer_8_output[i];
-        gg8<<cuda_layer_8_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 8(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
+  // // checksum L8 = -225414.96875
+  // ofstream gg8("layer8/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*16*16*256;i<(b+1)*16*16*256;i++){
+  //       sum_gpu += cuda_layer_8_output[i];
+  //       gg8<<cuda_layer_8_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 8(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
 
   /* Layer 9 CPU */
   // Layer 9: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}

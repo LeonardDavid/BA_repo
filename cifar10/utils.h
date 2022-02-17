@@ -5,6 +5,8 @@
 #define IMG_WIDTH 32    // original input image
 #define OUT_SIZE 10     // number of classes
 
+#define DIM_LAYER_8_WEIGHT 9216
+
 #pragma once 
 inline int index3D(const int x, const int y, const int z, const int sizey, const int sizez) {
     return x*sizey*sizez + y*sizez + z;

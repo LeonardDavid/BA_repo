@@ -611,7 +611,7 @@ using namespace std;
 //         if(b < BATCH_SIZE){
 //             d_cuda_layer_8_output[b*2048 + d] = d_layer_8_bias[d];
 //             for (int i = 0; i < 49; i++) {
-//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_9_output[b*49+i])) - 64;
+//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[b*49+i])) - 64;
 //             }
 //         }
 //     }
@@ -1489,7 +1489,7 @@ using namespace std;
 //         if(b < BATCH_SIZE){
 //             d_cuda_layer_8_output[b*2048 + d] = d_layer_8_bias[d];
 //             for (int i = 0; i < 49; i++) {
-//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_9_output[b*49+i])) - 64;
+//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[b*49+i])) - 64;
 //             }
 //         }
 //     }
@@ -2278,7 +2278,7 @@ using namespace std;
 //         if(b < BATCH_SIZE){
 //             d_cuda_layer_8_output[b*2048 + d] = d_layer_8_bias[d];
 //             for (int i = 0; i < 49; i++) {
-//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_9_output[b*49+i])) - 64;
+//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[b*49+i])) - 64;
 //             }
 //         }
 //     }
@@ -3160,7 +3160,7 @@ __global__ void layer8_gemm_kernel(unsigned long long *d_cuda_layer_7_output, fl
         if(b < BATCH_SIZE){
             d_cuda_layer_8_output[b*2048 + d] = d_layer_8_bias[d];
             for (int i = 0; i < 49; i++) {
-                d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_9_output[b*49+i])) - 64;
+                d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[b*49+i])) - 64;
             }
         }
     }
@@ -3863,7 +3863,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 //         if(b < BATCH_SIZE){
 //             d_cuda_layer_8_output[b*2048 + d] = d_layer_8_bias[d];
 //             for (int i = 0; i < 49; i++) {
-//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_9_output[b*49+i])) - 64;
+//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[b*49+i])) - 64;
 //             }
 //         }
 //     }
@@ -4245,7 +4245,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 //         if(b < BATCH_SIZE){
 //             d_cuda_layer_8_output[b*2048 + d] = d_layer_8_bias[d];
 //             for (int i = 0; i < 49; i++) {
-//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_9_output[b*49+i])) - 64;
+//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[b*49+i])) - 64;
 //             }
 //         }
 //     }
@@ -4484,7 +4484,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 //         if(b < BATCH_SIZE){
 //             d_cuda_layer_8_output[b*2048 + d] = d_layer_8_bias[d];
 //             for (int i = 0; i < 49; i++) {
-//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_9_output[b*49+i])) - 64;
+//                 d_cuda_layer_8_output[b*2048 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*49+i] ^ d_cuda_layer_7_output[b*49+i])) - 64;
 //             }
 //         }
 //     }

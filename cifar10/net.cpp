@@ -520,34 +520,44 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     }
   }
 
-  unsigned long long *cuda_layer_12_output = (unsigned long long *) layer_12_output;
-
-  /* Layer 13 CPU */
-  // Layer 13: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+  // unsigned long long *cuda_layer_12_output = (unsigned long long *) layer_12_output;
+  //  ^ direct pointer assignment leads to segmentation fault ^
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int h = 0; h < 8; h++) {
       for (int w = 0; w < 8; w++) {
-        for (int m = 0; m < 512; m++) {
-          layer_13_output[b][h][w][m] = layer_13_bias[m];
-        }
-        for (int kH = 0; kH < 3; kH++) {
-          int iH = h * 1 + kH - 1;
-          if (iH >= 0 && iH < 8) {
-            for (int kW = 0; kW < 3; kW++) {
-              int iW = w * 1 + kW - 1;
-              if (iW >= 0 && iW < 8) {
-                for (int m = 0; m < 512; m++) {
-                  for (int c = 0; c < 8; c++) {
-                    layer_13_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_13_weight[kH][kW][m][c] ^ layer_12_output[b][iH][iW][c])) - 64;
-                  }
-                }
-              }
-            }
-          }
+        for (int c = 0; c < 512; c++) {
+          cuda_layer_12_output[index4D(b,h,w,c,8,8,512)] = layer_12_output[b][h][w][c];
         }
       }
     }
   }
+
+  /* Layer 13 CPU */
+  // Layer 13: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 8; h++) {
+  //     for (int w = 0; w < 8; w++) {
+  //       for (int m = 0; m < 512; m++) {
+  //         layer_13_output[b][h][w][m] = layer_13_bias[m];
+  //       }
+  //       for (int kH = 0; kH < 3; kH++) {
+  //         int iH = h * 1 + kH - 1;
+  //         if (iH >= 0 && iH < 8) {
+  //           for (int kW = 0; kW < 3; kW++) {
+  //             int iW = w * 1 + kW - 1;
+  //             if (iW >= 0 && iW < 8) {
+  //               for (int m = 0; m < 512; m++) {
+  //                 for (int c = 0; c < 8; c++) {
+  //                   layer_13_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_13_weight[kH][kW][m][c] ^ cuda_layer_12_output[index4D(b,iH,iW,c,8,8,512)])) - 64;
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // // checksum L13 = -125208.054688
   // ofstream g13("layer13/orig.out");
@@ -565,7 +575,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // }
 
   /* Layer 13 GPU */
-  // kernel_time += layer13_conv(cuda_layer_12_output, cuda_layer_13_output);
+  kernel_time += layer13_conv(cuda_layer_12_output, cuda_layer_13_output);
 
   // // checksum L13 = -125208.054688
   // ofstream gg13("layer13/par.out");
@@ -589,7 +599,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
         for (int kH = 0; kH < 2; kH++) {
           for (int kW = 0; kW < 2; kW++) {
             for (int c = 0; c < 512; c++) {
-              layer_14_output[b][h][w][c] = std::max(layer_13_output[b][h * 2 + kH][w * 2 + kW][c], layer_14_output[b][h][w][c]);
+              layer_14_output[b][h][w][c] = std::max(cuda_layer_13_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,8,8,512)], layer_14_output[b][h][w][c]);
             }
           }
         }

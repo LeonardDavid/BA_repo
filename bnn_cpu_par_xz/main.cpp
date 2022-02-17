@@ -39,7 +39,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     float total_kernel_time = 0;
     
     auto start = std::chrono::high_resolution_clock::now();
-    for (unsigned int i = 0; i < lsize; i+=factor) { // i := # image
+    for (unsigned int i = 0; i < 1; i+=factor) { // i := # image
         std::fill(output, output+10*BATCH_SIZE, 0);
 
         unsigned char * img;
@@ -94,7 +94,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     float accuracy[BATCH_SIZE];
     for(int b = 0; b < BATCH_SIZE; b++){
         accuracy[b] = static_cast<float> (matches[b]) / (lsize/factor) * 100.f;
-        printf("Accuracy batch %d: %.1f%\n", b, accuracy[b]);
+        printf("Accuracy batch %d: %.1f%, Matches: %d/10000\n", b, accuracy[b],matches[b]);
     }
 
     auto total_cpu_time = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count());

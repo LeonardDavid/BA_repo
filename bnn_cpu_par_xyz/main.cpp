@@ -39,7 +39,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     float total_kernel_time = 0;
     
     auto start = std::chrono::high_resolution_clock::now();
-    for (unsigned int i = 0; i < lsize; i+=factor) { // i := # image
+    for (unsigned int i = 0; i < 1; i+=factor) { // i := # image
         std::fill(output, output+OUT_SIZE*BATCH_SIZE, 0);
        
         unsigned char * img;

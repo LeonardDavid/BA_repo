@@ -212,16 +212,17 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
         the outputs appear to be the same as the original implementation (including the sum)
         -> not important for now, but good to know in case something does not add up later
     */
-    // float sum = 0;
-    // ofstream g("layer_1_par.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*50176;i<(b+1)*50176;i++){
-    //         sum += cuda_layer_1_output[i];
-    //         g<<cuda_layer_1_output[i]<<" ";  
-    //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
+    float sum = 0;
+    ofstream g("layer_1_par.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*50176;i<(b+1)*50176;i++){
+            sum += cuda_layer_1_output[i];
+            g<<cuda_layer_1_output[i]<<" ";  
+        }
+        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
+    cout<<endl;
     return milliseconds;
 }
 
@@ -332,16 +333,17 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     cudaCheckErrors("cudaFree fail");
 
     // checksum L2 = 455610.125000
-    // float sum = 0;
-    // ofstream g("layer_2_par.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*12544;i<(b+1)*12544;i++){
-    //         sum += cuda_layer_2_output[i];
-    //         g<<cuda_layer_2_output[i]<<" ";  
-    //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
+    float sum = 0;
+    ofstream g("layer_2_par.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*12544;i<(b+1)*12544;i++){
+            sum += cuda_layer_2_output[i];
+            g<<cuda_layer_2_output[i]<<" ";  
+        }
+        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
+    cout<<endl;
     return milliseconds;
 }
 
@@ -597,17 +599,17 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     cudaCheckErrors("cudaFree fail");
 
     // checksum L4 = 6334.000000
-    // float sum = 0;
-    // ofstream g("layer_4_par.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*12544;i<(b+1)*12544;i++){
-    //         sum += cuda_layer_4_output[i];
-    //         g<<cuda_layer_4_output[i]<<" ";  
-    //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
-
+    float sum = 0;
+    ofstream g("layer_4_par.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*12544;i<(b+1)*12544;i++){
+            sum += cuda_layer_4_output[i];
+            g<<cuda_layer_4_output[i]<<" ";  
+        }
+        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
+    cout<<endl;
     return milliseconds;
 }
 
@@ -718,17 +720,18 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     cudaFree(d_cuda_layer_5_output);
     cudaCheckErrors("cudaFree fail");
 
-    // checksum
-    // float sum = 0;
-    // ofstream g("layer_5_par.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*3136;i<(b+1)*3136;i++){
-    //         sum += cuda_layer_5_output[i];
-    //         g<<cuda_layer_5_output[i]<<" ";  
-    //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
+    // checksum L5 = 81406.0
+    float sum = 0;
+    ofstream g("layer_5_par.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*3136;i<(b+1)*3136;i++){
+            sum += cuda_layer_5_output[i];
+            g<<cuda_layer_5_output[i]<<" ";  
+        }
+        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
+    cout<<endl;
     return milliseconds;
 }
 
@@ -827,16 +830,17 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     cudaCheckErrors("cudaFree fail");
 
     // checksum L8 = 8936.000000
-    // float sum = 0;
-    // ofstream g("layer_8_par1.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*2048;i<(b+1)*2048;i++){
-    //         sum += cuda_layer_8_output[i];
-    //         g<<cuda_layer_8_output[i]<<" ";  
-    //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
+    float sum = 0;
+    ofstream g("layer_8_par1.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*2048;i<(b+1)*2048;i++){
+            sum += cuda_layer_8_output[i];
+            g<<cuda_layer_8_output[i]<<" ";  
+        }
+        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
+    cout<<endl;
     return milliseconds;
 }
 
@@ -931,15 +935,16 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     cudaCheckErrors("cudaFree fail");
 
     // checksum L10 = -666.000000
-    // float sum = 0;
-    // ofstream g("layer_10_par1.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*10;i<(b+1)*10;i++){
-    //         sum += cuda_layer_10_output[i];
-    //         g<<cuda_layer_10_output[i]<<" ";  
-    //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
+    float sum = 0;
+    ofstream g("layer_10_par1.out");
+    for(int b=0;b<BATCH_SIZE;b++){
+        sum=0;
+        for(int i=b*10;i<(b+1)*10;i++){
+            sum += cuda_layer_10_output[i];
+            g<<cuda_layer_10_output[i]<<" ";  
+        }
+        cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+    }
+    cout<<endl;
     return milliseconds;
 }

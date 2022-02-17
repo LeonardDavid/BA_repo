@@ -711,16 +711,16 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
 
   /* Layer 19 CPU */
   // Layer 19: Gemm @ cpp.binary
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int d = 0; d < 10; d++) {
-      layer_19_output[b][d] = layer_19_bias[d];
-    }
-    for (int d = 0; d < 10; d++) {
-      for (int i = 0; i < 16; i++) {
-        layer_19_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_19_weight[d][i] ^ layer_18_output[b][i])) - 64;
-      }
-    }
-  }
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int d = 0; d < 10; d++) {
+  //     layer_19_output[b][d] = layer_19_bias[d];
+  //   }
+  //   for (int d = 0; d < 10; d++) {
+  //     for (int i = 0; i < 16; i++) {
+  //       layer_19_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_19_weight[d][i] ^ cuda_layer_18_output[b*16+i])) - 64;
+  //     }
+  //   }
+  // }
 
   // // checksum L19 = 16.014023
   // ofstream g19("layer19/orig.out");
@@ -734,7 +734,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // }
 
   /* Layer 19 GPU */
-  // kernel_time += layer19_gemm(cuda_layer_18_output, cuda_layer_19_output);
+  kernel_time += layer19_gemm(cuda_layer_18_output, cuda_layer_19_output);
 
   // // checksum L19 = 16.014023
   // ofstream gg19("layer19/par.out");
@@ -749,7 +749,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
 
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int i = 0; i < 10; i++) {
-      pred[b*10 + i] += layer_19_output[b][i];
+      pred[b*10 + i] += cuda_layer_19_output[b*10 + i];
     }
   }
 

@@ -374,22 +374,22 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
 
   /* Layer 9 CPU */
   // Layer 9: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int h = 0; h < 8; h++) {
-      for (int w = 0; w < 8; w++) {
-        for (int c = 0; c < 256; c++) {
-          layer_9_output[b][h][w][c] = std::numeric_limits<float>::lowest();
-        }
-        for (int kH = 0; kH < 2; kH++) {
-          for (int kW = 0; kW < 2; kW++) {
-            for (int c = 0; c < 256; c++) {
-              layer_9_output[b][h][w][c] = std::max(cuda_layer_8_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,16,16,256)], layer_9_output[b][h][w][c]);
-            }
-          }
-        }
-      }
-    }
-  }
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 8; h++) {
+  //     for (int w = 0; w < 8; w++) {
+  //       for (int c = 0; c < 256; c++) {
+  //         layer_9_output[b][h][w][c] = std::numeric_limits<float>::lowest();
+  //       }
+  //       for (int kH = 0; kH < 2; kH++) {
+  //         for (int kW = 0; kW < 2; kW++) {
+  //           for (int c = 0; c < 256; c++) {
+  //             layer_9_output[b][h][w][c] = std::max(cuda_layer_8_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,16,16,256)], layer_9_output[b][h][w][c]);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // // checksum L9 = 2192928.0
   // ofstream g9("layer9/orig.out");
@@ -407,7 +407,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // }
 
   /* Layer 9 GPU */
-  // kernel_time += layer9_maxpool(cuda_layer_8_output, cuda_layer_9_output);
+  kernel_time += layer9_maxpool(cuda_layer_8_output, cuda_layer_9_output);
 
   // // checksum L9 = 2192928.0
   // ofstream gg9("layer9/par.out");
@@ -426,7 +426,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     for (int h = 0; h < 8; h++) {
       for (int w = 0; w < 8; w++) {
         for (int c = 0; c < 256; c++) {
-          if (layer_9_output[b][h][w][c] >layer_10_threshold[c]) {
+          if (cuda_layer_9_output[index4D(b,h,w,c,8,8,256)] >layer_10_threshold[c]) {
             layer_10_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_10_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));

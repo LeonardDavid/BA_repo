@@ -1,11 +1,9 @@
-#define BATCH_SIZE 2
+#define BATCH_SIZE 1
 #define NR_NEURONS 64
 #define NR_CHANNELS 3   // number of channels of input image
 #define IMG_HEIGHT 32   // original input image
 #define IMG_WIDTH 32    // original input image
 #define OUT_SIZE 10     // number of classes
-
-#define DIM_LAYER_8_WEIGHT 9216
 
 #pragma once 
 inline int index3D(const int x, const int y, const int z, const int sizey, const int sizez) {

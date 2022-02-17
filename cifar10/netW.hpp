@@ -43,13 +43,13 @@ static float layer_14_output[BATCH_SIZE][4][4][512];
 static float cuda_layer_14_output[BATCH_SIZE*4*4*512];
 
 static unsigned long long layer_15_output[BATCH_SIZE][4][4][8];
-// static unsigned long long cuda_layer_15_output[BATCH_SIZE*4*4*8*64]; //x64 necessary
+// static unsigned long long cuda_layer_15_output[BATCH_SIZE*4*4*8*64]; //x64 necessary // not used
 
 static float layer_17_output[BATCH_SIZE][1024];
 static float cuda_layer_17_output[BATCH_SIZE*1024];
 
 static unsigned long long layer_18_output[BATCH_SIZE][16];
-// static unsigned long long cuda_layer_18_output[BATCH_SIZE*16];
+// static unsigned long long cuda_layer_18_output[BATCH_SIZE*16]; // not used
 
 static float layer_19_output[BATCH_SIZE][10];
 static float cuda_layer_19_output[BATCH_SIZE*10];

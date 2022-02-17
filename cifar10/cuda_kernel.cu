@@ -1096,7 +1096,7 @@ __global__ void layer17_gemm_kernel(unsigned long long *d_cuda_layer_16_output, 
         if(b < BATCH_SIZE){
             d_cuda_layer_17_output[b*1024 + d] = d_layer_17_bias[d];
             for (int i = 0; i < 128; i++) {
-                d_cuda_layer_17_output[b*1024 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_17_weight[d*128+i] ^ d_cuda_layer_16_output[i])) - 64;
+                d_cuda_layer_17_output[b*1024 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_17_weight[d*128+i] ^ d_cuda_layer_16_output[b*128+i])) - 64;
             }
         }
     }

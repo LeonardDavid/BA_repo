@@ -824,7 +824,7 @@ __global__ void layer8_gemm_kernel(unsigned long long *d_cuda_layer_7_output, fl
         if(b < BATCH_SIZE){
             d_cuda_layer_8_output[b*OSm + d] = d_layer_8_bias[d];
             for (int i = 0; i < ISm/BINARY_WORD_SIZE; i++) {
-                d_cuda_layer_8_output[b*OSm + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*(ISm/BINARY_WORD_SIZE)+i] ^ d_cuda_layer_7_output[i])) - BINARY_WORD_SIZE;
+                d_cuda_layer_8_output[b*OSm + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_8_weight[d*(ISm/BINARY_WORD_SIZE)+i] ^ d_cuda_layer_7_output[b*ISm/BINARY_WORD_SIZE+i])) - BINARY_WORD_SIZE;
             }
         }
     }
@@ -950,7 +950,7 @@ __global__ void layer10_gemm_kernel(unsigned long long *d_cuda_layer_9_output, f
         if(b<BATCH_SIZE){
             d_cuda_layer_10_output[b*OSm + d] = d_layer_10_bias[d];
             for (int i = 0; i < ISm/BINARY_WORD_SIZE; i++) {
-                d_cuda_layer_10_output[b*OSm + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_10_weight[d*(ISm/BINARY_WORD_SIZE)+i] ^ d_cuda_layer_9_output[i])) - BINARY_WORD_SIZE;
+                d_cuda_layer_10_output[b*OSm + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_10_weight[d*(ISm/BINARY_WORD_SIZE)+i] ^ d_cuda_layer_9_output[b*ISm/BINARY_WORD_SIZE+i])) - BINARY_WORD_SIZE;
             }
         }
     }

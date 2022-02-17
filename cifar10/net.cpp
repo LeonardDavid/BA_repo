@@ -655,7 +655,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // unsigned long long *cuda_layer_15_output = (unsigned long long *) layer_15_output;
 
   // Layer 16: Flatten @ cpp.NHWC:reshape.j2 
-  unsigned long long *layer_16_output = (unsigned long long *) layer_15_output;
+  unsigned long long *cuda_layer_16_output = (unsigned long long *) layer_15_output;
 
   /* Layer 17 CPU */
   // Layer 17: Gemm @ cpp.binary
@@ -665,7 +665,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   //   }
   //   for (int d = 0; d < 1024; d++) {
   //     for (int i = 0; i < 128; i++) {
-  //       layer_17_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ layer_16_output[i])) - 64; // b*128+i ?
+  //       layer_17_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ cuda_layer_16_output[b*128 + i])) - 64; // b*128+i ?
   //     }
   //   }
   // }
@@ -682,7 +682,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // }
 
   /* Layer 17 GPU */
-  kernel_time += layer17_gemm(layer_16_output, cuda_layer_17_output);
+  kernel_time += layer17_gemm(cuda_layer_16_output, cuda_layer_17_output);
 
   // // checksum L17 = 10874.058594
   // ofstream gg17("layer17/par.out");

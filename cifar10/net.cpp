@@ -659,16 +659,16 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
 
   /* Layer 17 CPU */
   // Layer 17: Gemm @ cpp.binary
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int d = 0; d < 1024; d++) {
-      layer_17_output[b][d] = layer_17_bias[d];
-    }
-    for (int d = 0; d < 1024; d++) {
-      for (int i = 0; i < 128; i++) {
-        layer_17_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ layer_16_output[i])) - 64; // b*128+i ?
-      }
-    }
-  }
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int d = 0; d < 1024; d++) {
+  //     layer_17_output[b][d] = layer_17_bias[d];
+  //   }
+  //   for (int d = 0; d < 1024; d++) {
+  //     for (int i = 0; i < 128; i++) {
+  //       layer_17_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ layer_16_output[i])) - 64; // b*128+i ?
+  //     }
+  //   }
+  // }
 
   // // checksum L17 = 10874.058594
   // ofstream g17("layer17/orig.out");
@@ -682,7 +682,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // }
 
   /* Layer 17 GPU */
-  // kernel_time += layer17_gemm(layer_16_output, cuda_layer_17_output);
+  kernel_time += layer17_gemm(layer_16_output, cuda_layer_17_output);
 
   // // checksum L17 = 10874.058594
   // ofstream gg17("layer17/par.out");
@@ -699,7 +699,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // Layer 18: Step @ cpp.binary {% else %} /{% if layer.output_shape|length > 2 %}
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int d = 0; d < 1024; d++) {
-      if (layer_17_output[b][d] >layer_18_threshold[d]) {
+      if (cuda_layer_17_output[b*1024 + d] >layer_18_threshold[d]) {
         layer_18_output[b][d / 64] |= (1ULL << (63 - d % 64));
       } else {
         layer_18_output[b][d / 64] &= ~(1ULL << (63 - d % 64));

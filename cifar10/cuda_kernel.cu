@@ -1083,10 +1083,96 @@ float layer14_maxpool_cuda(float * cuda_layer_13_output, float * cuda_layer_14_o
     return milliseconds;
 }
 
+__global__ void layer17_gemm_kernel(unsigned long long *d_cuda_layer_16_output, float *d_layer_17_bias, unsigned long long *d_cuda_layer_17_weight, float *d_cuda_layer_17_output){
+
+    int z = blockDim.x * blockIdx.z + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+
+    int d = z*blockDim.x+y;
+
+    int b = blockIdx.x;
+
+    if(d < 1024){
+        if(b < BATCH_SIZE){
+            d_cuda_layer_17_output[b*1024 + d] = d_layer_17_bias[d];
+            for (int i = 0; i < 128; i++) {
+                d_cuda_layer_17_output[b*1024 + d] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_17_weight[d*128+i] ^ d_cuda_layer_16_output[i])) - 64;
+            }
+        }
+    }
+}
+
 float layer17_gemm_cuda(unsigned long long * cuda_layer_16_output, float * cuda_layer_17_output){
     
     setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
     
+    // flatten 3D -> 1D arrays
+    // flatten layer_17_weight
+    unsigned long long *cuda_layer_17_weight = (unsigned long long *) layer_17_weight;
+
+    // prepare for kernel call
+    // declare storage on device
+    unsigned long long *d_cuda_layer_16_output; // storage on device for cuda_layer_16_output
+    float *d_layer_17_bias;  // storage on device for layer_17_bias
+    unsigned long long *d_cuda_layer_17_weight; // storage on device for cuda_layer_17_weight
+    float *d_cuda_layer_17_output; // RESULT storage on device for cuda_layer_17_output
+
+    // allocate GPU device buffers
+    cudaMalloc((void **) &d_cuda_layer_16_output, BATCH_SIZE*4*4*8*sizeof(unsigned long long)); // 128=4x4x8 dim of cuda_layer_16_output
+    cudaMalloc((void **) &d_layer_17_bias, 1024*sizeof(float)); // 1024 = dim of layer_17_bias
+    cudaMalloc((void **) &d_cuda_layer_17_weight, 1024*128*sizeof(unsigned long long)); // 131072 = 1024x128 dim of layer_17_weight [ULL]
+    cudaMalloc((void **) &d_cuda_layer_17_output, BATCH_SIZE*1024*sizeof(float)); // 1024 = dim of layer_17_output
+    cudaCheckErrors("Failed to allocate device buffer");
+
+    // copy input data from host on device
+    cudaMemcpy(d_cuda_layer_16_output, cuda_layer_16_output, (BATCH_SIZE*4*4*8*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_layer_17_bias, layer_17_bias, (1024*sizeof(float)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_17_weight, cuda_layer_17_weight, (1024*128*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaCheckErrors("CUDA memcpy failure");
+
+    // define thread and block sizes
+    /*
+        Maximum threads in a block: 1024 => Maximum block size 32x32
+        if more than 1024 threads are needed, then set block size to maximum (32x32) and put multiple blocks in z-dir
+        else if less than 1024 are needed, then only create 1 (square) block in z-dir, of size ceil(sqrt(THREADS_NEEDED))
+    */
+    const int BLKXSIZE = 32;
+    const int BLKYSIZE = 32;
+    const int GRIDXSIZE = BATCH_SIZE;
+    const int GRIDYSIZE = 1;
+    const int GRIDZSIZE = 1;
+
+    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE);
+    const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
+
+    // timing of the kernel
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    float milliseconds = 0;
+
+    // compute result - kernel call
+    cudaEventRecord(start);
+    layer17_gemm_kernel<<<numBlocks,threadsPerBlock>>>(d_cuda_layer_16_output, d_layer_17_bias, d_cuda_layer_17_weight, d_cuda_layer_17_output);
+    cudaEventRecord(stop);
+    cudaCheckErrors("Kernel launch failure");
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_17_output, d_cuda_layer_17_output, (BATCH_SIZE*1024*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
+
+    // synchronize threads
+    cudaDeviceSynchronize();
+    cudaCheckErrors("CUDA synchronize failure");
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // free the memory
+    cudaFree(d_cuda_layer_16_output);
+    cudaFree(d_layer_17_bias);
+    cudaFree(d_cuda_layer_17_weight);
+    cudaFree(d_cuda_layer_17_output);
+    cudaCheckErrors("cudaFree fail");
+
     return 0;
 }
 

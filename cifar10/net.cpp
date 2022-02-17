@@ -304,34 +304,44 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     }
   }
 
-  unsigned long long *cuda_layer_7_output = (unsigned long long *) layer_7_output;
-
-  /* Layer 8 CPU */
-  // Layer 8: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+  // unsigned long long *cuda_layer_7_output = (unsigned long long *) layer_7_output;
+  // ^ direct pointer assignment leads to segmentation fault ^
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int h = 0; h < 16; h++) {
       for (int w = 0; w < 16; w++) {
-        for (int m = 0; m < 256; m++) {
-          layer_8_output[b][h][w][m] = layer_8_bias[m];
-        }
-        for (int kH = 0; kH < 3; kH++) {
-          int iH = h * 1 + kH - 1;
-          if (iH >= 0 && iH < 16) {
-            for (int kW = 0; kW < 3; kW++) {
-              int iW = w * 1 + kW - 1;
-              if (iW >= 0 && iW < 16) {
-                for (int m = 0; m < 256; m++) {
-                  for (int c = 0; c < 4; c++) {
-                    layer_8_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[kH][kW][m][c] ^ layer_7_output[b][iH][iW][c])) - 64;
-                  }
-                }
-              }
-            }
-          }
+        for (int c = 0; c < 256; c++) {
+          cuda_layer_7_output[index4D(b,h,w,c,16,16,256)] = layer_7_output[b][h][w][c];
         }
       }
     }
   }
+
+  /* Layer 8 CPU */
+  // Layer 8: Conv @ cpp.binary {% else %} /{% if layer.pads == [0, 0, 0, 0] %}
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 16; h++) {
+  //     for (int w = 0; w < 16; w++) {
+  //       for (int m = 0; m < 256; m++) {
+  //         layer_8_output[b][h][w][m] = layer_8_bias[m];
+  //       }
+  //       for (int kH = 0; kH < 3; kH++) {
+  //         int iH = h * 1 + kH - 1;
+  //         if (iH >= 0 && iH < 16) {
+  //           for (int kW = 0; kW < 3; kW++) {
+  //             int iW = w * 1 + kW - 1;
+  //             if (iW >= 0 && iW < 16) {
+  //               for (int m = 0; m < 256; m++) {
+  //                 for (int c = 0; c < 4; c++) {
+  //                   layer_8_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[kH][kW][m][c] ^ cuda_layer_7_output[index4D(b,iH,iW,c,16,16,256)])) - 64;
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
 
   // // checksum L8 = -225414.96875
   // ofstream g8("layer8/orig.out");
@@ -349,18 +359,18 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   // }
 
   /* Layer 8 GPU */
-  // kernel_time += layer8_conv(cuda_layer_7_output, cuda_layer_8_output);
+  kernel_time += layer8_conv(cuda_layer_7_output, cuda_layer_8_output);
 
-  // // checksum L8 = -225414.96875
-  // ofstream gg8("layer8/par.out");
-  // for(int b=0;b<BATCH_SIZE;b++){
-  //   sum_gpu = 0;
-  //   for(int i=b*16*16*256;i<(b+1)*16*16*256;i++){
-  //       sum_gpu += cuda_layer_8_output[i];
-  //       gg8<<cuda_layer_8_output[i]<<" ";  
-  //   }
-  //   cout<<fixed<<"layer 8(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  // }
+  // checksum L8 = -225414.96875
+  ofstream gg8("layer8/par.out");
+  for(int b=0;b<BATCH_SIZE;b++){
+    sum_gpu = 0;
+    for(int i=b*16*16*256;i<(b+1)*16*16*256;i++){
+        sum_gpu += cuda_layer_8_output[i];
+        gg8<<cuda_layer_8_output[i]<<" ";  
+    }
+    cout<<fixed<<"layer 8(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  }
 
   /* Layer 9 CPU */
   // Layer 9: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
@@ -373,7 +383,7 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
         for (int kH = 0; kH < 2; kH++) {
           for (int kW = 0; kW < 2; kW++) {
             for (int c = 0; c < 256; c++) {
-              layer_9_output[b][h][w][c] = std::max(layer_8_output[b][h * 2 + kH][w * 2 + kW][c], layer_9_output[b][h][w][c]);
+              layer_9_output[b][h][w][c] = std::max(cuda_layer_8_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,16,16,256)], layer_9_output[b][h][w][c]);
             }
           }
         }

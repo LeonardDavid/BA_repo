@@ -164,9 +164,6 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     cudaCheckErrors("CUDA memcpy failure");
 
     // define thread and block sizes
-    // const int dataxsize = 28;
-    // const int dataysize = 28;
-    // const int datamul = dataxsize*dataysize;
     const int BLKXSIZE = 28;
     const int BLKYSIZE = 1;
     const int GRIDXSIZE = BATCH_SIZE;
@@ -846,7 +843,10 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
 // Layer 10 - Gemm (xyz)
 __global__ void layer10_gemm_kernel(unsigned long long *d_cuda_layer_9_output, float *d_layer_10_bias, unsigned long long *d_cuda_layer_10_weight, signed short *d_cuda_layer_10_output){
 
-    int d = threadIdx.x;
+    int z = blockDim.x * blockIdx.z + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+
+    int d = z*blockDim.x+y;
 
     int b = blockIdx.x;
 

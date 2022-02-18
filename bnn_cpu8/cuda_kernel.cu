@@ -48,14 +48,14 @@ using namespace std;
     cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
 
-    // copy result from device to host
-
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
 
@@ -169,14 +169,14 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (50176*sizeof(float)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (50176*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_0_output);
@@ -258,14 +258,14 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_2_output, d_cuda_layer_2_output, (12544*sizeof(float)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_2_output, d_cuda_layer_2_output, (12544*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_1_output);
@@ -395,14 +395,14 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_3_output, d_cuda_layer_3_output, (12544*sizeof(unsigned long long)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_3_output, d_cuda_layer_3_output, (12544*sizeof(unsigned long long)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_2_output);
@@ -507,14 +507,14 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (12544*sizeof(signed short)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");    
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (12544*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_3_output);
@@ -597,14 +597,14 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_5_output, d_cuda_layer_5_output, (3136*sizeof(signed short)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_5_output, d_cuda_layer_5_output, (3136*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_4_output);
@@ -684,14 +684,14 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_8_output, d_cuda_layer_8_output, (2048*sizeof(signed short)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_8_output, d_cuda_layer_8_output, (2048*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_7_output);
@@ -768,14 +768,14 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_10_output, d_cuda_layer_10_output, (10*sizeof(signed short)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+    
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_10_output, d_cuda_layer_10_output, (10*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_9_output);

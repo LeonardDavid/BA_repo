@@ -9,9 +9,9 @@ float layer2_maxpool(float * layer1, float * layer2, size_t nr_layer){
   return layer2_maxpool_cuda(layer1, layer2, nr_layer);
 }
 
-float layer3_step(float * layer1, unsigned long long * layer2, size_t nr_layer){
-  return layer3_step_cuda(layer1, layer2, nr_layer);
-}
+// float layer3_step(float * layer1, unsigned long long * layer2, size_t nr_layer){
+//   return layer3_step_cuda(layer1, layer2, nr_layer);
+// }
 
 float layer4_conv(unsigned long long * layer1, signed short * layer2, size_t nr_layer){
   return layer4_conv_cuda(layer1, layer2, nr_layer);

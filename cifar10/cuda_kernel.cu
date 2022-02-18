@@ -364,14 +364,14 @@ float layer4_maxpool_cuda(float * cuda_layer_3_output, float * cuda_layer_4_outp
     cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (BATCH_SIZE*16*16*128*sizeof(float)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (BATCH_SIZE*16*16*128*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_3_output);
@@ -715,14 +715,14 @@ float layer9_maxpool_cuda(float * cuda_layer_8_output, float * cuda_layer_9_outp
     cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_9_output, d_cuda_layer_9_output, (BATCH_SIZE*8*8*256*sizeof(float)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_9_output, d_cuda_layer_9_output, (BATCH_SIZE*8*8*256*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_8_output);
@@ -1066,14 +1066,14 @@ float layer14_maxpool_cuda(float * cuda_layer_13_output, float * cuda_layer_14_o
     cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_14_output, d_cuda_layer_14_output, (BATCH_SIZE*4*4*512*sizeof(float)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_14_output, d_cuda_layer_14_output, (BATCH_SIZE*4*4*512*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_13_output);
@@ -1157,14 +1157,14 @@ float layer17_gemm_cuda(unsigned long long * cuda_layer_16_output, float * cuda_
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_17_output, d_cuda_layer_17_output, (BATCH_SIZE*1024*sizeof(float)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_17_output, d_cuda_layer_17_output, (BATCH_SIZE*1024*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_16_output);
@@ -1250,14 +1250,14 @@ float layer19_gemm_cuda(unsigned long long * cuda_layer_18_output, float * cuda_
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_19_output, d_cuda_layer_19_output, (BATCH_SIZE*10*sizeof(float)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+    
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_19_output, d_cuda_layer_19_output, (BATCH_SIZE*10*sizeof(float)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_18_output);

@@ -113,14 +113,14 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (BATCH_SIZE*12544*sizeof(signed short)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");    
     cudaEventElapsedTime(&milliseconds, start, stop);
+
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_4_output, d_cuda_layer_4_output, (BATCH_SIZE*12544*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_3_output);
@@ -214,14 +214,14 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     cudaEventRecord(stop);
     cudaCheckErrors("Kernel launch failure");
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_8_output, d_cuda_layer_8_output, (BATCH_SIZE*2048*sizeof(signed short)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
-
     // synchronize threads
     cudaDeviceSynchronize();
     cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
+    
+    // copy result from device to host
+    cudaMemcpy(cuda_layer_8_output, d_cuda_layer_8_output, (BATCH_SIZE*2048*sizeof(signed short)), cudaMemcpyDeviceToHost);
+    cudaCheckErrors("CUDA memcpy failure");
 
     // free the memory
     cudaFree(d_cuda_layer_7_output);

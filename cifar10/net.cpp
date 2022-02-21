@@ -61,17 +61,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 1 GPU */
   kernel_time += layer1_conv(x, cuda_layer_1_output);
 
-  // checksum L1 = 5720315.5
-  ofstream gg1("layer1/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-      sum_gpu = 0;
-      for(int i=b*32*32*128;i<(b+1)*32*32*128;i++){
-          sum_gpu += cuda_layer_1_output[i];
-          gg1<<cuda_layer_1_output[i]<<" ";  
-      }
-      cout<<fixed<<"layer 1(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L1 = 5720315.5
+  // ofstream gg1("layer1/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //     sum_gpu = 0;
+  //     for(int i=b*32*32*128;i<(b+1)*32*32*128;i++){
+  //         sum_gpu += cuda_layer_1_output[i];
+  //         gg1<<cuda_layer_1_output[i]<<" ";  
+  //     }
+  //     cout<<fixed<<"layer 1(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 2 CPU */
   // Layer 2: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
@@ -146,17 +146,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 3 GPU */ 
   kernel_time += layer3_conv(cuda_layer_2_output, cuda_layer_3_output);
 
-  // checksum L3 = -2335755.75
-  ofstream gg3("layer3/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*32*32*128;i<(b+1)*32*32*128;i++){
-        sum_gpu += cuda_layer_3_output[i];
-        gg3<<cuda_layer_3_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 3(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L3 = -2335755.75
+  // ofstream gg3("layer3/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*32*32*128;i<(b+1)*32*32*128;i++){
+  //       sum_gpu += cuda_layer_3_output[i];
+  //       gg3<<cuda_layer_3_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 3(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 4 CPU */
   // Layer 4: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
@@ -195,17 +195,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 4 GPU */
   kernel_time += layer4_maxpool(cuda_layer_3_output, cuda_layer_4_output);
 
-  // checksum L4 = 1633936.0
-  ofstream gg4("layer4/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*16*16*128;i<(b+1)*16*16*128;i++){
-        sum_gpu += cuda_layer_4_output[i];
-        gg4<<cuda_layer_4_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 4(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L4 = 1633936.0
+  // ofstream gg4("layer4/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*16*16*128;i<(b+1)*16*16*128;i++){
+  //       sum_gpu += cuda_layer_4_output[i];
+  //       gg4<<cuda_layer_4_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 4(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 5 CPU */
   // Layer 5: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
@@ -280,17 +280,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 6 GPU */
   kernel_time += layer6_conv(cuda_layer_5_output, cuda_layer_6_output);
 
-  // checksum L6 = -20699.617188
-  ofstream gg6("layer6/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*16*16*256;i<(b+1)*16*16*256;i++){
-        sum_gpu += cuda_layer_6_output[i];
-        gg6<<cuda_layer_6_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 6(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L6 = -20699.617188
+  // ofstream gg6("layer6/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*16*16*256;i<(b+1)*16*16*256;i++){
+  //       sum_gpu += cuda_layer_6_output[i];
+  //       gg6<<cuda_layer_6_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 6(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 7 CPU */
   // Layer 7: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
@@ -365,17 +365,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 8 GPU */
   kernel_time += layer8_conv(cuda_layer_7_output, cuda_layer_8_output);
 
-  // checksum L8 = -225414.96875
-  ofstream gg8("layer8/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*16*16*256;i<(b+1)*16*16*256;i++){
-        sum_gpu += cuda_layer_8_output[i];
-        gg8<<cuda_layer_8_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 8(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L8 = -225414.96875
+  // ofstream gg8("layer8/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*16*16*256;i<(b+1)*16*16*256;i++){
+  //       sum_gpu += cuda_layer_8_output[i];
+  //       gg8<<cuda_layer_8_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 8(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 9 CPU */
   // Layer 9: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
@@ -414,17 +414,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 9 GPU */
   kernel_time += layer9_maxpool(cuda_layer_8_output, cuda_layer_9_output);
 
-  // checksum L9 = 2192928.0
-  ofstream gg9("layer9/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*8*8*256;i<(b+1)*8*8*256;i++){
-        sum_gpu += cuda_layer_9_output[i];
-        gg9<<cuda_layer_9_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 9(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L9 = 2192928.0
+  // ofstream gg9("layer9/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*8*8*256;i<(b+1)*8*8*256;i++){
+  //       sum_gpu += cuda_layer_9_output[i];
+  //       gg9<<cuda_layer_9_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 9(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 10 CPU */
   // Layer 10: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
@@ -499,17 +499,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 11 GPU */
   kernel_time += layer11_conv(cuda_layer_10_output, cuda_layer_11_output);
 
-  // checksum L11 = 38519.339844
-  ofstream gg11("layer11/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*8*8*512;i<(b+1)*8*8*512;i++){
-        sum_gpu += cuda_layer_11_output[i];
-        gg11<<cuda_layer_11_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 11(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L11 = 38519.339844
+  // ofstream gg11("layer11/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*8*8*512;i<(b+1)*8*8*512;i++){
+  //       sum_gpu += cuda_layer_11_output[i];
+  //       gg11<<cuda_layer_11_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 11(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 12 CPU */
   // Layer 12: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
@@ -584,17 +584,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 13 GPU */
   kernel_time += layer13_conv(cuda_layer_12_output, cuda_layer_13_output);
 
-  // checksum L13 = -125208.054688
-  ofstream gg13("layer13/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*8*8*512;i<(b+1)*8*8*512;i++){
-        sum_gpu += cuda_layer_13_output[i];
-        gg13<<cuda_layer_13_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 13(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L13 = -125208.054688
+  // ofstream gg13("layer13/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*8*8*512;i<(b+1)*8*8*512;i++){
+  //       sum_gpu += cuda_layer_13_output[i];
+  //       gg13<<cuda_layer_13_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 13(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 14 CPU */ 
   // Layer 14: MaxPool @ cpp.NHWC {% if pads == [0, 0, 0, 0] %}
@@ -633,17 +633,17 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
   /* Layer 14 GPU */ 
   kernel_time += layer14_maxpool(cuda_layer_13_output, cuda_layer_14_output);
 
-  // checksum L14 = 1373773.625
-  ofstream gg14("layer14/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*4*4*512;i<(b+1)*4*4*512;i++){
-        sum_gpu += cuda_layer_14_output[i];
-        gg14<<cuda_layer_14_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 14(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L14 = 1373773.625
+  // ofstream gg14("layer14/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*4*4*512;i<(b+1)*4*4*512;i++){
+  //       sum_gpu += cuda_layer_14_output[i];
+  //       gg14<<cuda_layer_14_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 14(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 15 CPU */
   // Layer 15: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
@@ -679,31 +679,31 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     }
   }
 
-  // checksum L17 = 10874.058594
-  ofstream g17("layer17/orig.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_cpu = 0;
-    for (int d = 0; d < 1024; d++) {
-      sum_cpu += layer_17_output[b][d];
-      g17<<layer_17_output[b][d]<<" ";  
-    }
-    cout<<fixed<<"layer 17(CPU): batch "<<b<<": "<<sum_cpu<<endl;
-  }
+  // // checksum L17 = 10874.058594
+  // ofstream g17("layer17/orig.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_cpu = 0;
+  //   for (int d = 0; d < 1024; d++) {
+  //     sum_cpu += layer_17_output[b][d];
+  //     g17<<layer_17_output[b][d]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 17(CPU): batch "<<b<<": "<<sum_cpu<<endl;
+  // }
 
   /* Layer 17 GPU */
   kernel_time += layer17_gemm(cuda_layer_16_output, cuda_layer_17_output);
 
-  // checksum L17 = 10874.058594
-  ofstream gg17("layer17/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*1024;i<(b+1)*1024;i++){
-        sum_gpu += cuda_layer_17_output[i];
-        gg17<<cuda_layer_17_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 17(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L17 = 10874.058594
+  // ofstream gg17("layer17/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*1024;i<(b+1)*1024;i++){
+  //       sum_gpu += cuda_layer_17_output[i];
+  //       gg17<<cuda_layer_17_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 17(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   /* Layer 18 CPU */
   // Layer 18: Step @ cpp.binary {% else %} /{% if layer.output_shape|length > 2 %}
@@ -732,31 +732,31 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     }
   }
 
-  // checksum L19 = 16.014023
-  ofstream g19("layer19/orig.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_cpu = 0;
-    for (int d = 0; d < 10; d++) {
-      sum_cpu += layer_19_output[b][d];
-      g19<<layer_19_output[b][d]<<" ";  
-    }
-    cout<<fixed<<"layer 19(CPU): batch "<<b<<": "<<sum_cpu<<endl;
-  }
+  // // checksum L19 = 16.014023
+  // ofstream g19("layer19/orig.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_cpu = 0;
+  //   for (int d = 0; d < 10; d++) {
+  //     sum_cpu += layer_19_output[b][d];
+  //     g19<<layer_19_output[b][d]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 19(CPU): batch "<<b<<": "<<sum_cpu<<endl;
+  // }
 
   /* Layer 19 GPU */
   kernel_time += layer19_gemm(cuda_layer_18_output, cuda_layer_19_output);
 
-  // checksum L19 = 16.014023
-  ofstream gg19("layer19/par.out");
-  for(int b=0;b<BATCH_SIZE;b++){
-    sum_gpu = 0;
-    for(int i=b*10;i<(b+1)*10;i++){
-        sum_gpu += cuda_layer_19_output[i];
-        gg19<<cuda_layer_19_output[i]<<" ";  
-    }
-    cout<<fixed<<"layer 19(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-  }
-  cout<<endl;
+  // // checksum L19 = 16.014023
+  // ofstream gg19("layer19/par.out");
+  // for(int b=0;b<BATCH_SIZE;b++){
+  //   sum_gpu = 0;
+  //   for(int i=b*10;i<(b+1)*10;i++){
+  //       sum_gpu += cuda_layer_19_output[i];
+  //       gg19<<cuda_layer_19_output[i]<<" ";  
+  //   }
+  //   cout<<fixed<<"layer 19(GPU): batch "<<b<<": "<<sum_gpu<<endl;
+  // }
+  // cout<<endl;
   
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int i = 0; i < 10; i++) {
@@ -764,14 +764,14 @@ float predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigne
     }
   }
 
-  for (int b = 0; b < BATCH_SIZE; b++){
-    cout<<"b: "<<b<<": ";
-    for(int i=0;i<10;i++){
-      cout<<pred[b*10 + i]<<", ";
-    }
-    printf("\n");
-  }
-  printf("\n");
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   cout<<"b: "<<b<<": ";
+  //   for(int i=0;i<10;i++){
+  //     cout<<pred[b*10 + i]<<", ";
+  //   }
+  //   printf("\n");
+  // }
+  // printf("\n");
 
   return kernel_time;
 

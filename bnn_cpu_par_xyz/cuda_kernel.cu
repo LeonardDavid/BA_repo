@@ -73,7 +73,8 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
 
     // https://github.com/ULHPC/tutorials/blob/devel/cuda/exercises/convolution/LoG_gpu_solution.cu
 
-    int N = 28, kernel_size = 3;
+    int N = (28+1); // +1 obligatory necessary because of reasons!
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -89,12 +90,12 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
     //idx global index (all blocks) of the image pixel 
-    int idx = iy*N +ix;
+    int idx = iy*N + ix;
 
     // bias is applied to every pixel
     if(tid < N){
-        if(b<BATCH_SIZE){
-            if(m<NR_NEURONS) {
+        if(b < BATCH_SIZE){
+            if(m < NR_NEURONS) {
                 d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
             }
         }
@@ -110,10 +111,9 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
                 for (int kW = 0; kW < kernel_size; kW++){
                     int iW = w * 1 + kW - 1;
                     if (iW >= 0 && iW < 28) {
-                        if(b<BATCH_SIZE){
+                        if(b < BATCH_SIZE){
                             for (int c = 0; c < 1; c++) {
-                                if(m<NR_NEURONS) {
-                                    // atomicAdd(&d_cuda_layer_1_output[index4D_cuda(b,bid,tid,m,28,28,64)], d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)]);
+                                if(m < NR_NEURONS) {
                                     d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
                                 }
                             }
@@ -219,6 +219,9 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     //     for(int i=b*50176;i<(b+1)*50176;i++){
     //         sum += cuda_layer_1_output[i];
     //         g<<cuda_layer_1_output[i]<<" ";  
+    //         if((i+1)%64==0){
+    //             g<<endl;
+    //         }
     //     }
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
@@ -230,7 +233,8 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
 __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-    int N = 14, kernel_size = 2;
+    int N = (14+1); // +1 obligatory necessary because of reasons!
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -481,7 +485,8 @@ float layer3_step_cuda(float * cuda_layer_2_output, unsigned long long * cuda_la
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
     
-    int N = 14, kernel_size = 3;
+    int N = (14+1); // +1 obligatory necessary because of reasons!
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -616,7 +621,8 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
 // Layer 5 - Maxpool (xyz)
 __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, signed short * d_cuda_layer_5_output, signed short lowest){
 
-    int N = 7, kernel_size = 2;
+    int N = (7+1); // +1 obligatory necessary because of reasons!
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w

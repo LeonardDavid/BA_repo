@@ -2138,7 +2138,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     
 }
 
-std::tuple<float, float, float> layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
+float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){ // std::tuple<float, float, float>
 
     setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
     
@@ -2160,32 +2160,29 @@ std::tuple<float, float, float> layer1_conv_cuda(unsigned char * const x, float 
     float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
 
     // allocate GPU device buffers
-    auto start1 = std::chrono::high_resolution_clock::now();
+    // auto start1 = std::chrono::high_resolution_clock::now();
     cudaMalloc((void **) &d_cuda_layer_0_output, BATCH_SIZE*784*sizeof(unsigned char)); // 784 = 28x28 dim of cuda_layer_0_output
     cudaMalloc((void **) &d_layer_1_bias, 64*sizeof(float)); // 64 = dim of layer_1_bias
     cudaMalloc((void **) &d_cuda_layer_1_weight, 576*sizeof(signed char)); // 576 = 3x3x1x64 dim of layer_1_weight
     cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
-    // cudaCheckErrors("Failed to allocate device buffer");
-    auto end1 = std::chrono::high_resolution_clock::now();
-    auto malloc_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
+    cudaCheckErrors("Failed to allocate device buffer");
+    // auto end1 = std::chrono::high_resolution_clock::now();
+    // auto malloc_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
 
 
     // cudaMemGetInfo(&free,&total);   
     // printf("after: %d KB free of total %d KB\n",free/1024,total/1024);
 
     // copy input data from host on device
-    start1 = std::chrono::high_resolution_clock::now();
+    // start1 = std::chrono::high_resolution_clock::now();
     cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*784*sizeof(unsigned char)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_1_bias, layer_1_bias, (64*sizeof(float)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (576*sizeof(signed char)), cudaMemcpyHostToDevice);
-    // cudaCheckErrors("CUDA memcpy failure");
-    end1 = std::chrono::high_resolution_clock::now();
-    auto cpy_time1 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
+    cudaCheckErrors("CUDA memcpy failure");
+    // end1 = std::chrono::high_resolution_clock::now();
+    // auto cpy_time1 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
 
     // define thread and block sizes
-    // const int dataxsize = 28;
-    // const int dataysize = 28;
-    // const int datamul = dataxsize*dataysize;
     const int BLKXSIZE = 28;
     const int BLKYSIZE = 1;
     const int GRIDXSIZE = BATCH_SIZE;
@@ -2204,28 +2201,28 @@ std::tuple<float, float, float> layer1_conv_cuda(unsigned char * const x, float 
     // compute result - kernel call
     cudaEventRecord(start);
     layer1_conv_kernel<<<numBlocks,threadsPerBlock>>>(d_cuda_layer_0_output, d_layer_1_bias, d_cuda_layer_1_weight, d_cuda_layer_1_output);
-    // cudaCheckErrors("Kernel launch failure");
+    cudaCheckErrors("Kernel launch failure");
     cudaEventRecord(stop);
     
     // synchronize threads
     cudaDeviceSynchronize();
-    // cudaCheckErrors("CUDA synchronize failure");
+    cudaCheckErrors("CUDA synchronize failure");
     cudaEventElapsedTime(&milliseconds, start, stop);
 
     // copy result from device to host
-    start1 = std::chrono::high_resolution_clock::now();
+    // start1 = std::chrono::high_resolution_clock::now();
     cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (BATCH_SIZE*50176*sizeof(float)), cudaMemcpyDeviceToHost);
-    // cudaCheckErrors("CUDA memcpy failure");
-    end1 = std::chrono::high_resolution_clock::now();
-    auto cpy_time2 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
-    auto cpy_time = cpy_time1 + cpy_time2;
+    cudaCheckErrors("CUDA memcpy failure");
+    // end1 = std::chrono::high_resolution_clock::now();
+    // auto cpy_time2 = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end1-start1).count());
+    // auto cpy_time = cpy_time1 + cpy_time2;
 
     // free the memory
     cudaFree(d_cuda_layer_0_output);
     cudaFree(d_layer_1_bias);
     cudaFree(d_cuda_layer_1_weight);
     cudaFree(d_cuda_layer_1_output);
-    // cudaCheckErrors("cudaFree fail");
+    cudaCheckErrors("cudaFree fail");
     
     // checksum L1 = -605468.812500
     /*
@@ -2248,7 +2245,8 @@ std::tuple<float, float, float> layer1_conv_cuda(unsigned char * const x, float 
     //     }
     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
     // }
-    return make_tuple(milliseconds, malloc_time, cpy_time);
+    // return make_tuple(milliseconds, malloc_time, cpy_time);
+    return milliseconds;
 }
 
 // Layer 2 - Maxpool (xyz)

@@ -177,8 +177,9 @@ int main() {
     float sum_l = l1_time + l2_time + l3_time + l4_time + l5_time + l6_time + l8_time + l9_time + l10_time;
     float sum_kl = l1_ktime + l2_ktime + l4_ktime + l5_ktime + l8_ktime + l10_ktime;
 
-    printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n %-50s%-10s %-5.2f [s]\n %-50s%-10s %-5.2f [s]\n", "Layer 1 time:", l1_time, "Ratio:", (l1_time/sum_l)*100, "kernel:", l1_ktime, "kRatio:", (l1_ktime/sum_kl)*100,
-                                                                                "","=> malloc:", malloc_time, "","=> copy: ", cpy_time);
+    // printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n %-50s%-10s %-5.2f [s]\n %-50s%-10s %-5.2f [s]\n", "Layer 1 time:", l1_time, "Ratio:", (l1_time/sum_l)*100, "kernel:", l1_ktime, "kRatio:", (l1_ktime/sum_kl)*100,
+    //                                                                             "","=> malloc:", malloc_time, "","=> copy: ", cpy_time);
+    printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 1 time:", l1_time, "Ratio:", (l1_time/sum_l)*100, "kernel:", l1_ktime, "kRatio:", (l1_ktime/sum_kl)*100);
     printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 2 time:", l2_time, "Ratio:", (l2_time/sum_l)*100, "kernel:", l2_ktime, "kRatio:", (l2_ktime/sum_kl)*100);
     printf("%-15s %-10.2f [s], %-10s %-5.2f%\n", "Layer 3 time:", l3_time, "Ratio:", (l3_time/sum_l)*100);
     printf("%-15s %-10.2f [s], %-10s %-5.2f% => %-5s %-5.2f [s] %-10s %-5.2f%\n", "Layer 4 time:", l4_time, "Ratio:", (l4_time/sum_l)*100, "kernel:", l4_ktime, "kRatio:", (l4_ktime/sum_kl)*100);

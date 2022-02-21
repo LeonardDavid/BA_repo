@@ -14,7 +14,8 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
 
     // https://github.com/ULHPC/tutorials/blob/devel/cuda/exercises/convolution/LoG_gpu_solution.cu
 
-    int N = 32, kernel_size = 3;
+    int N = (32+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -25,7 +26,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     // batches in x-dir
     int b = blockIdx.x;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -154,7 +155,8 @@ float layer1_conv_cuda(unsigned char x[][32][32][3], float * cuda_layer_1_output
 
 __global__ void layer3_conv_kernel(unsigned long long *d_cuda_layer_2_output, float *d_layer_3_bias, unsigned long long *d_cuda_layer_3_weight, float *d_cuda_layer_3_output){
 
-    int N = 32, kernel_size = 3;
+    int N = (32+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -165,7 +167,7 @@ __global__ void layer3_conv_kernel(unsigned long long *d_cuda_layer_2_output, fl
     // batches in x-dir
     int b = blockIdx.x;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -276,7 +278,8 @@ float layer3_conv_cuda(unsigned long long * cuda_layer_2_output, float * cuda_la
 
 __global__ void layer4_maxpool_kernel(float *d_cuda_layer_3_output, float *d_cuda_layer_4_output, float lowest){
 
-    int N = 16, kernel_size = 2;
+    int N = (16+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -286,7 +289,7 @@ __global__ void layer4_maxpool_kernel(float *d_cuda_layer_3_output, float *d_cud
 
     int b = blockIdx.x; // Batches index in grid x dir
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -383,7 +386,8 @@ float layer4_maxpool_cuda(float * cuda_layer_3_output, float * cuda_layer_4_outp
 
 __global__ void layer6_conv_kernel(unsigned long long *d_cuda_layer_5_output, float *d_layer_6_bias, unsigned long long *d_cuda_layer_6_weight, float *d_cuda_layer_6_output){
     
-    int N = 16, kernel_size = 3;
+    int N = (16+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -394,7 +398,7 @@ __global__ void layer6_conv_kernel(unsigned long long *d_cuda_layer_5_output, fl
     // batches in x-dir
     int b = blockIdx.x;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -505,7 +509,8 @@ float layer6_conv_cuda(unsigned long long * cuda_layer_5_output, float * cuda_la
 
 __global__ void layer8_conv_kernel(unsigned long long *d_cuda_layer_7_output, float *d_layer_8_bias, unsigned long long *d_cuda_layer_8_weight, float *d_cuda_layer_8_output){
 
-    int N = 16, kernel_size = 3;
+    int N = (16+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -516,7 +521,7 @@ __global__ void layer8_conv_kernel(unsigned long long *d_cuda_layer_7_output, fl
     // batches in x-dir
     int b = blockIdx.x;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -627,7 +632,8 @@ float layer8_conv_cuda(unsigned long long * cuda_layer_7_output, float * cuda_la
 
 __global__ void layer9_maxpool_kernel(float *d_cuda_layer_8_output, float *d_cuda_layer_9_output, float lowest){
 
-    int N = 8, kernel_size = 2;
+    int N = (8+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -637,7 +643,7 @@ __global__ void layer9_maxpool_kernel(float *d_cuda_layer_8_output, float *d_cud
 
     int b = blockIdx.x; // Batches index in grid x dir
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -734,7 +740,8 @@ float layer9_maxpool_cuda(float * cuda_layer_8_output, float * cuda_layer_9_outp
 
 __global__ void layer11_conv_kernel(unsigned long long *d_cuda_layer_10_output, float *d_layer_11_bias, unsigned long long *d_cuda_layer_11_weight, float *d_cuda_layer_11_output){
 
-    int N = 8, kernel_size = 3;
+    int N = (8+1); // +1 to cover all edges (fixes bug #ky2) 
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -745,7 +752,7 @@ __global__ void layer11_conv_kernel(unsigned long long *d_cuda_layer_10_output, 
     // batches in x-dir
     int b = blockIdx.x;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -856,7 +863,8 @@ float layer11_conv_cuda(unsigned long long * cuda_layer_10_output, float * cuda_
 
 __global__ void layer13_conv_kernel(unsigned long long *d_cuda_layer_12_output, float *d_layer_13_bias, unsigned long long *d_cuda_layer_13_weight, float *d_cuda_layer_13_output){
 
-    int N = 8, kernel_size = 3;
+    int N = (8+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -867,7 +875,7 @@ __global__ void layer13_conv_kernel(unsigned long long *d_cuda_layer_12_output, 
     // batches in x-dir
     int b = blockIdx.x;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -978,7 +986,8 @@ float layer13_conv_cuda(unsigned long long * cuda_layer_12_output, float * cuda_
 
 __global__ void layer14_maxpool_kernel(float *d_cuda_layer_13_output, float *d_cuda_layer_14_output, float lowest){
 
-    int N = 4, kernel_size = 2;
+    int N = (4+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -988,7 +997,7 @@ __global__ void layer14_maxpool_kernel(float *d_cuda_layer_13_output, float *d_c
 
     int b = blockIdx.x; // Batches index in grid x dir
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     

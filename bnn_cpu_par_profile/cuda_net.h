@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "cuda_kernel.h"
 
-std::tuple<float, float, float> layer1_conv(unsigned char * const x, float * layer){
+float layer1_conv(unsigned char * const x, float * layer){ // std::tuple<float, float, float>
   return layer1_conv_cuda(x, layer);
 }
 

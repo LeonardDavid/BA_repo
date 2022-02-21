@@ -146,13 +146,14 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
 
     // https://github.com/ULHPC/tutorials/blob/devel/cuda/exercises/convolution/LoG_gpu_solution.cu
 
-    int N = 28, kernel_size = 3;
+    int N = (28+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
     int h = tid, w = bid;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -357,13 +358,14 @@ __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cud
     //     }
     // }
 
-    int N = 14, kernel_size = 2;
+    int N = (14+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
     int h = tid, w = bid;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -533,13 +535,14 @@ __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, fl
     //     }
     // }
     
-    int N = 28, kernel_size = 3;
+    int N = (28+1);
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
     int h = tid, w = bid;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -712,13 +715,14 @@ __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, sign
     //     }
     // }
 
-    int N = 14, kernel_size = 2;
+    int N = (14+1);// +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
     int h = tid, w = bid;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     

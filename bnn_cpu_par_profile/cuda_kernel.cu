@@ -674,7 +674,8 @@ using namespace std;
 
 //     // https://github.com/ULHPC/tutorials/blob/devel/cuda/exercises/convolution/LoG_gpu_solution.cu
 
-//     int N = 28, kernel_size = 3;
+//     int N = (28+1); // +1 to cover all edges (fixes bug #ky2)
+//     int kernel_size = 3;
 
 //     int tid = threadIdx.x; // = h
 //     int bid = blockIdx.y;  // = w
@@ -683,7 +684,7 @@ using namespace std;
 //     // batches in x-dir
 //     int b = blockIdx.x;
 //     //each block is assigned to a row of an image, iy index of y value                  
-//     int iy = blockIdx.x + (kernel_size - 1)/2;  
+//     int iy = blockIdx.y + (kernel_size - 1)/2;  
 //     //each thread is assigned to a pixel of a row, ix index of x value
 //     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -839,7 +840,8 @@ using namespace std;
 
 // __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-//     int N = 14, kernel_size = 2;
+//     int N = (14+1); // +1 to cover all edges (fixes bug #ky2)
+//     int kernel_size = 2;
 
 //     int tid = threadIdx.x; // = h
 //     int bid = blockIdx.y;  // = w
@@ -847,7 +849,7 @@ using namespace std;
 
 //     int b = blockIdx.x; // Batches index in grid x dir
 //     //each block is assigned to a row of an image, iy index of y value                  
-//     int iy = blockIdx.x + (kernel_size - 1)/2;  
+//     int iy = blockIdx.y + (kernel_size - 1)/2;  
 //     //each thread is assigned to a pixel of a row, ix index of x value
 //     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -959,7 +961,8 @@ using namespace std;
 
 // __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
     
-//     int N = 28, kernel_size = 3;
+//     int N = (28+1); // +1 to cover all edges (fixes bug #ky2)
+//     int kernel_size = 3;
 
 //     int tid = threadIdx.x; // = h
 //     int bid = blockIdx.y;  // = w
@@ -967,7 +970,7 @@ using namespace std;
 
 //     int b = blockIdx.x; //batches in x-dir
 //     //each block is assigned to a row of an image, iy index of y value                  
-//     int iy = blockIdx.x + (kernel_size - 1)/2;  
+//     int iy = blockIdx.y + (kernel_size - 1)/2;  
 //     //each thread is assigned to a pixel of a row, ix index of x value
 //     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -1094,7 +1097,8 @@ using namespace std;
 // // Layer 5 - Maxpool
 // __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, signed short * d_cuda_layer_5_output, signed short lowest){
 
-//     int N = 7, kernel_size = 2;
+//     int N = (7+1); // +1 to cover all edges (fixes bug #ky2)
+//     int kernel_size = 2;
 
 //     int tid = threadIdx.x; // = h
 //     int bid = blockIdx.y;  // = w
@@ -1102,7 +1106,7 @@ using namespace std;
 
 //     int b = blockIdx.x; // batches in x-dir
 //     //each block is assigned to a row of an image, iy index of y value                  
-//     int iy = blockIdx.x + (kernel_size - 1)/2;  
+//     int iy = blockIdx.y + (kernel_size - 1)/2;  
 //     //each thread is assigned to a pixel of a row, ix index of x value
 //     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -2080,7 +2084,8 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
 
     // https://github.com/ULHPC/tutorials/blob/devel/cuda/exercises/convolution/LoG_gpu_solution.cu
 
-    int N = 28, kernel_size = 3;
+    int N = (28+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -2091,7 +2096,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     // batches in x-dir
     int b = blockIdx.x;
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -2250,7 +2255,8 @@ std::tuple<float, float, float> layer1_conv_cuda(unsigned char * const x, float 
 
 __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-    int N = 14, kernel_size = 2;
+    int N = (14+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -2260,7 +2266,7 @@ __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cud
 
     int b = blockIdx.x; // Batches index in grid x dir
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -2370,7 +2376,8 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
     
-    int N = 14, kernel_size = 3;
+    int N = (14+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -2380,7 +2387,7 @@ __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, fl
 
     int b = blockIdx.x; //batches in x-dir
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -2505,7 +2512,8 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
 // Layer 5 - Maxpool (xyz)
 __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, signed short * d_cuda_layer_5_output, signed short lowest){
 
-    int N = 7, kernel_size = 2;
+    int N = (7+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 2;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -2515,7 +2523,7 @@ __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, sign
 
     int b = blockIdx.x; // batches in x-dir
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -2847,7 +2855,8 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 
 //     // https://github.com/ULHPC/tutorials/blob/devel/cuda/exercises/convolution/LoG_gpu_solution.cu
 
-//     int N = 28, kernel_size = 3;
+//     int N = (28+1); // +1 to cover all edges (fixes bug #ky2)
+//     int kernel_size = 3;
 
 //     int tid = threadIdx.x; // = h
 //     int bid = blockIdx.y;  // = w
@@ -2858,7 +2867,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 //     // batches in x-dir
 //     int b = blockIdx.x;
 //     //each block is assigned to a row of an image, iy index of y value                  
-//     int iy = blockIdx.x + (kernel_size - 1)/2;  
+//     int iy = blockIdx.y + (kernel_size - 1)/2;  
 //     //each thread is assigned to a pixel of a row, ix index of x value
 //     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -3006,7 +3015,8 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 
 // __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-//     int N = 14, kernel_size = 2;
+//     int N = (14+1); // +1 to cover all edges (fixes bug #ky2)
+//     int kernel_size = 2;
 
 //     int tid = threadIdx.x; // = h
 //     int bid = blockIdx.y;  // = w
@@ -3016,7 +3026,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 
 //     int b = blockIdx.x; // Batches index in grid x dir
 //     //each block is assigned to a row of an image, iy index of y value                  
-//     int iy = blockIdx.x + (kernel_size - 1)/2;  
+//     int iy = blockIdx.y + (kernel_size - 1)/2;  
 //     //each thread is assigned to a pixel of a row, ix index of x value
 //     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -3452,7 +3462,8 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 
 //     // https://github.com/ULHPC/tutorials/blob/devel/cuda/exercises/convolution/LoG_gpu_solution.cu
 
-//     int N = 28, kernel_size = 3;
+//     int N = (28+1); // +1 to cover all edges (fixes bug #ky2)
+//     int kernel_size = 3;
 
 //     int tid = threadIdx.x; // = h
 //     int bid = blockIdx.y;  // = w
@@ -3463,7 +3474,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 //     // batches in x-dir
 //     int b = blockIdx.x;
 //     //each block is assigned to a row of an image, iy index of y value                  
-//     int iy = blockIdx.x + (kernel_size - 1)/2;  
+//     int iy = blockIdx.y + (kernel_size - 1)/2;  
 //     //each thread is assigned to a pixel of a row, ix index of x value
 //     int ix = threadIdx.x + (kernel_size - 1)/2; 
     
@@ -3832,7 +3843,8 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 
 // __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
     
-//     int N = 14, kernel_size = 3;
+//     int N = (14+1); // +1 to cover all edges (fixes bug #ky2)
+//     int kernel_size = 3;
 
 //     int tid = threadIdx.x; // = h
 //     int bid = blockIdx.y;  // = w
@@ -3842,7 +3854,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
 
 //     int b = blockIdx.x; //batches in x-dir
 //     //each block is assigned to a row of an image, iy index of y value                  
-//     int iy = blockIdx.x + (kernel_size - 1)/2;  
+//     int iy = blockIdx.y + (kernel_size - 1)/2;  
 //     //each thread is assigned to a pixel of a row, ix index of x value
 //     int ix = threadIdx.x + (kernel_size - 1)/2; 
     

@@ -83,15 +83,15 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     int h = tid, w = bid;
 
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (KSh - 1)/2;  
+    int iy = blockIdx.y + (KSh - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (KSw - 1)/2; 
     
     //idx global index (all blocks) of the image pixel 
-    int idx = iy*OSh +ix;
+    int idx = iy*(OSh+1) +ix;
 
     // bias is applied to every pixel
-    if(tid < OSh){
+    if(tid < (OSh+1)){
         if(b < BATCH_SIZE){
             if(m < OSm) {
                 d_cuda_layer_1_output[index4D_cuda(b,h,w,m,OSh,OSw,OSm)] = d_layer_1_bias[m];
@@ -102,7 +102,7 @@ __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *
     __syncthreads();
 
     // edge pixels are skipped here because they cannot fit entire convolution window
-    if(idx < OSh*OSw){
+    if(idx < (OSh+1)*(OSw+1)){
         for (int kH = 0; kH < KSh; kH++){
             int iH = h * s0 + kH - p0;
             if (iH >= 0 && iH < ISh) {
@@ -257,15 +257,15 @@ __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cud
     int h = tid, w = bid;
 
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (KSh - 1)/2;  
+    int iy = blockIdx.y + (KSh - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (KSw - 1)/2; 
     
     //idx global index (all blocks) of the image pixel 
-    int idx = iy*OSh +ix;
+    int idx = iy*(OSh+1) +ix;
 
     // bias is applied to every pixel
-    if(tid < OSh){
+    if(tid < (OSh+1)){
         if(b < BATCH_SIZE){
             if(c < OSm) {
                 d_cuda_layer_2_output[index4D_cuda(b,h,w,c,OSh,OSw,OSm)] = lowest;
@@ -276,7 +276,7 @@ __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cud
     __syncthreads();
 
     // edge pixels are skipped here because they cannot fit entire convolution window
-    if(idx < OSh*OSw){
+    if(idx < (OSh+1)*(OSw+1)){
         for (int kH = 0; kH < KSh; kH++){
             for (int kW = 0; kW < KSw; kW++){
                 if(b < BATCH_SIZE){
@@ -395,15 +395,15 @@ __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, fl
     int h = tid, w = bid;
 
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (KSh - 1)/2;  
+    int iy = blockIdx.y + (KSh - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (KSw - 1)/2; 
     
     //idx global index (all blocks) of the image pixel 
-    int idx = iy*OSh +ix;
+    int idx = iy*(OSh+1) +ix;
 
     // bias is applied to every pixel
-    if(tid < OSh){
+    if(tid < (OSh+1)){
         if(b < BATCH_SIZE){
             if(m < OSm) {
                 d_cuda_layer_4_output[index4D_cuda(b,h,w,m,OSh,OSw,OSm)] = d_layer_4_bias[m]; // = 0;
@@ -414,7 +414,7 @@ __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, fl
     __syncthreads();
 
     // edge pixels are skipped here because they cannot fit entire convolution window
-    if(idx < OSh*OSw){
+    if(idx < (OSh+1)*(OSw+1)){
         for (int kH = 0; kH < KSh; kH++){
             int iH = h * s0 + kH - p0;
             if (iH >= 0 && iH < ISh) {
@@ -548,15 +548,15 @@ __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, sign
     int h = tid, w = bid;
 
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (KSh - 1)/2;  
+    int iy = blockIdx.y + (KSh - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (KSw - 1)/2; 
     
     //idx global index (all blocks) of the image pixel 
-    int idx = iy*OSh +ix;
+    int idx = iy*(OSh+1) +ix;
 
     // bias is applied to every pixel
-    if(tid < OSh){
+    if(tid < (OSh+1)){
         if(b < BATCH_SIZE){
             if(c < OSm) {
                 d_cuda_layer_5_output[index4D_cuda(b,h,w,c,OSh,OSw,OSm)] = lowest;
@@ -567,7 +567,7 @@ __global__ void layer5_maxpool_kernel(signed short * d_cuda_layer_4_output, sign
     __syncthreads();
 
     // edge pixels are skipped here because they cannot fit entire convolution window
-    if(idx < OSh*OSw){
+    if(idx < (OSh+1)*(OSw+1)){
         for (int kH = 0; kH < KSh; kH++){
             for (int kW = 0; kW < KSw; kW++){
                 if(b < BATCH_SIZE){

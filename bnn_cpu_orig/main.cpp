@@ -25,7 +25,7 @@ auto benchmark(MNISTLoader &loader, int tsh, bool verbose = false) {
     int factor = 1;
     int matches = 0;
     auto start = std::chrono::high_resolution_clock::now();
-    for (unsigned int i = 0; i < 1; i+=factor) { //loader.size()
+    for (unsigned int i = 0; i < loader.size(); i+=factor) { // loader.size()
         std::fill(output, output+10, 0);
         unsigned char * const  img = loader.images(i); //i
         int label = loader.labels(i); //i

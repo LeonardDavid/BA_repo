@@ -12,7 +12,8 @@ using namespace std;
 
 __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, float *d_layer_4_bias, unsigned long long *d_cuda_layer_4_weight, signed short *d_cuda_layer_4_output){
     
-    int N = 14, kernel_size = 3;
+    int N = (14+1); // +1 to cover all edges (fixes bug #ky2)
+    int kernel_size = 3;
 
     int tid = threadIdx.x; // = h
     int bid = blockIdx.y;  // = w
@@ -22,7 +23,7 @@ __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, fl
 
     int b = blockIdx.x; //batches in x-dir
     //each block is assigned to a row of an image, iy index of y value                  
-    int iy = blockIdx.x + (kernel_size - 1)/2;  
+    int iy = blockIdx.y + (kernel_size - 1)/2;  
     //each thread is assigned to a pixel of a row, ix index of x value
     int ix = threadIdx.x + (kernel_size - 1)/2; 
     

@@ -469,18 +469,17 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     // allocate GPU device buffers
     const size_t size3 = BATCH_SIZE*ISh*ISw*ISm; // BATCH_SIZE*14*14*64 = input shape of layer4 = cuda_layer_3_output
     const size_t size4 = BATCH_SIZE*OSh*OSw*OSm; // BATCH_SIZE*14*14*64 = output shape of layer4 = cuda_layer_4_output
-    const size_t weight4 = 64*weight_size[nr_layer]; // 36864=64x576=3x3x64x[1x64] dim of layer_4_weight [ULL]
 
     cudaMalloc((void **) &d_cuda_layer_3_output, size3*sizeof(unsigned long long)); // 12544=64x196=14x14 dim of cuda_layer_4_output
     cudaMalloc((void **) &d_layer_4_bias, bias_size[nr_layer]*sizeof(float)); // 64 = dim of layer_4_bias
-    cudaMalloc((void **) &d_cuda_layer_4_weight, weight4*sizeof(unsigned long long)); 
+    cudaMalloc((void **) &d_cuda_layer_4_weight, weight_size[nr_layer]*sizeof(unsigned long long)); 
     cudaMalloc((void **) &d_cuda_layer_4_output, size4*sizeof(signed short)); // 12544 = 14x14x64 dim of layer_4_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
     cudaMemcpy(d_cuda_layer_3_output, cuda_layer_3_output, (size3*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_4_bias, layer_4_bias, (bias_size[nr_layer]*sizeof(float)), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_cuda_layer_4_weight, cuda_layer_4_weight, (weight4*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_4_weight, cuda_layer_4_weight, (weight_size[nr_layer]*sizeof(unsigned long long)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
 
     // define thread and block sizes

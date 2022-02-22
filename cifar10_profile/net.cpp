@@ -744,7 +744,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
   
   /* Layer 15 CPU */
   // Layer 15: Step @ cpp.binary {% if layer.output_shape|length > 2 %}
-  // start = std::chrono::high_resolution_clock::now();
+  start = std::chrono::high_resolution_clock::now();
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int h = 0; h < 4; h++) {
       for (int w = 0; w < 4; w++) {
@@ -758,16 +758,13 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
       }
     }
   }
-  // end = std::chrono::high_resolution_clock::now();
-  // auto l15_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());   
+  end = std::chrono::high_resolution_clock::now();
+  auto l15_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());   
 
   // unsigned long long *cuda_layer_15_output = (unsigned long long *) layer_15_output;
 
   // Layer 16: Flatten @ cpp.NHWC:reshape.j2 
-  start = std::chrono::high_resolution_clock::now();
   unsigned long long *cuda_layer_16_output = (unsigned long long *) layer_15_output;
-  end = std::chrono::high_resolution_clock::now();
-  auto l15_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());   
 
   /* Layer 17 CPU */
   // Layer 17: Gemm @ cpp.binary

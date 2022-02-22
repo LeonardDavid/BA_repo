@@ -90,7 +90,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     for (int h = 0; h < 32; h++) {
       for (int w = 0; w < 32; w++) {
         for (int c = 0; c < 128; c++) {
-          if (cuda_layer_1_output[index4D(b,h,w,c,32,32,128)] > layer_2_threshold[c]) { // layer_1_output[b][h][w][c] , cuda_layer_1_output[index4D(b,h,w,c,32,32,128)]
+          if (layer_1_output[b][h][w][c] > layer_2_threshold[c]) { // layer_1_output[b][h][w][c] , cuda_layer_1_output[index4D(b,h,w,c,32,32,128)]
             layer_2_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_2_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));
@@ -100,17 +100,17 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     }
   }
 
-  // unsigned long long *cuda_layer_2_output = (unsigned long long *) layer_2_output;
-  // ^ direct pointer assignment leads to segmentation fault ^
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int h = 0; h < 32; h++) {
-      for (int w = 0; w < 32; w++) {
-        for (int c = 0; c < 128; c++) {
-          cuda_layer_2_output[index4D(b,h,w,c,32,32,128)] = layer_2_output[b][h][w][c];
-        }
-      }
-    }
-  }
+  // // unsigned long long *cuda_layer_2_output = (unsigned long long *) layer_2_output;
+  // // ^ direct pointer assignment leads to segmentation fault ^
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 32; h++) {
+  //     for (int w = 0; w < 32; w++) {
+  //       for (int c = 0; c < 128; c++) {
+  //         cuda_layer_2_output[index4D(b,h,w,c,32,32,128)] = layer_2_output[b][h][w][c];
+  //       }
+  //     }
+  //   }
+  // }
   end = std::chrono::high_resolution_clock::now();
   auto l2_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
 
@@ -131,7 +131,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
               if (iW >= 0 && iW < 32) {
                 for (int m = 0; m < 128; m++) {
                   for (int c = 0; c < 2; c++) {
-                    layer_3_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_3_weight[kH][kW][m][c] ^ cuda_layer_2_output[index4D(b,iH,iW,c,32,32,2)])) - 64; // layer_2_output[b][iH][iW][c])
+                    layer_3_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_3_weight[kH][kW][m][c] ^ layer_2_output[b][iH][iW][c])) - 64; // layer_2_output[b][iH][iW][c] / cuda_layer_2_output[index4D(b,iH,iW,c,32,32,2)]
                   }
                 }
               }
@@ -192,7 +192,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
         for (int kH = 0; kH < 2; kH++) {
           for (int kW = 0; kW < 2; kW++) {
             for (int c = 0; c < 128; c++) {
-              layer_4_output[b][h][w][c] = std::max(cuda_layer_3_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,32,32,128)], layer_4_output[b][h][w][c]);
+              layer_4_output[b][h][w][c] = std::max(layer_3_output[b][h * 2 + kH][w * 2 + kW][c], layer_4_output[b][h][w][c]); // layer_3_output[b][h * 2 + kH][w * 2 + kW][c] / cuda_layer_3_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,32,32,128)]
             }
           }
         }
@@ -245,7 +245,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     for (int h = 0; h < 16; h++) {
       for (int w = 0; w < 16; w++) {
         for (int c = 0; c < 128; c++) {
-          if (cuda_layer_4_output[index4D(b,h,w,c,16,16,128)] >layer_5_threshold[c]) {
+          if (layer_4_output[b][h][w][c] >layer_5_threshold[c]) { // layer_4_output[b][h][w][c] / cuda_layer_4_output[index4D(b,h,w,c,16,16,128)]
             layer_5_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_5_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));
@@ -255,17 +255,17 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     }
   }
 
-  // unsigned long long *cuda_layer_5_output = (unsigned long long *) layer_5_output;
-  // ^ direct pointer assignment leads to segmentation fault ^
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int h = 0; h < 16; h++) {
-      for (int w = 0; w < 16; w++) {
-        for (int c = 0; c < 128; c++) {
-          cuda_layer_5_output[index4D(b,h,w,c,16,16,128)] = layer_5_output[b][h][w][c];
-        }
-      }
-    }
-  }
+  // // unsigned long long *cuda_layer_5_output = (unsigned long long *) layer_5_output;
+  // // ^ direct pointer assignment leads to segmentation fault ^
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 16; h++) {
+  //     for (int w = 0; w < 16; w++) {
+  //       for (int c = 0; c < 128; c++) {
+  //         cuda_layer_5_output[index4D(b,h,w,c,16,16,128)] = layer_5_output[b][h][w][c];
+  //       }
+  //     }
+  //   }
+  // }
   end = std::chrono::high_resolution_clock::now();
   auto l5_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());    
 
@@ -286,7 +286,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
               if (iW >= 0 && iW < 16) {
                 for (int m = 0; m < 256; m++) {
                   for (int c = 0; c < 2; c++) {
-                    layer_6_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_6_weight[kH][kW][m][c] ^ cuda_layer_5_output[index4D(b,iH,iW,c,16,16,128)])) - 64;
+                    layer_6_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_6_weight[kH][kW][m][c] ^ layer_5_output[b][iH][iW][c])) - 64; // layer_5_output[b][iH][iW][c] / cuda_layer_5_output[index4D(b,iH,iW,c,16,16,128)]
                   }
                 }
               }
@@ -342,7 +342,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     for (int h = 0; h < 16; h++) {
       for (int w = 0; w < 16; w++) {
         for (int c = 0; c < 256; c++) {
-          if (cuda_layer_6_output[index4D(b,h,w,c,16,16,256)] >layer_7_threshold[c]) {
+          if (layer_6_output[b][h][w][c] >layer_7_threshold[c]) { // layer_6_output[b][h][w][c] / cuda_layer_6_output[index4D(b,h,w,c,16,16,256)]
             layer_7_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_7_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));
@@ -352,17 +352,17 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     }
   }
 
-  // unsigned long long *cuda_layer_7_output = (unsigned long long *) layer_7_output;
-  // ^ direct pointer assignment leads to segmentation fault ^
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int h = 0; h < 16; h++) {
-      for (int w = 0; w < 16; w++) {
-        for (int c = 0; c < 256; c++) {
-          cuda_layer_7_output[index4D(b,h,w,c,16,16,256)] = layer_7_output[b][h][w][c];
-        }
-      }
-    }
-  }
+  // // unsigned long long *cuda_layer_7_output = (unsigned long long *) layer_7_output;
+  // // ^ direct pointer assignment leads to segmentation fault ^
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 16; h++) {
+  //     for (int w = 0; w < 16; w++) {
+  //       for (int c = 0; c < 256; c++) {
+  //         cuda_layer_7_output[index4D(b,h,w,c,16,16,256)] = layer_7_output[b][h][w][c];
+  //       }
+  //     }
+  //   }
+  // }
   end = std::chrono::high_resolution_clock::now();
   auto l7_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());   
 
@@ -383,7 +383,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
               if (iW >= 0 && iW < 16) {
                 for (int m = 0; m < 256; m++) {
                   for (int c = 0; c < 4; c++) {
-                    layer_8_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[kH][kW][m][c] ^ cuda_layer_7_output[index4D(b,iH,iW,c,16,16,256)])) - 64;
+                    layer_8_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[kH][kW][m][c] ^ layer_7_output[b][iH][iW][c])) - 64; // layer_7_output[b][iH][iW][c] / cuda_layer_7_output[index4D(b,iH,iW,c,16,16,256)]
                   }
                 }
               }
@@ -444,7 +444,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
         for (int kH = 0; kH < 2; kH++) {
           for (int kW = 0; kW < 2; kW++) {
             for (int c = 0; c < 256; c++) {
-              layer_9_output[b][h][w][c] = std::max(cuda_layer_8_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,16,16,256)], layer_9_output[b][h][w][c]);
+              layer_9_output[b][h][w][c] = std::max(layer_8_output[b][h * 2 + kH][w * 2 + kW][c], layer_9_output[b][h][w][c]); // layer_8_output[b][h * 2 + kH][w * 2 + kW][c] / cuda_layer_8_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,16,16,256)]
             }
           }
         }
@@ -497,7 +497,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     for (int h = 0; h < 8; h++) {
       for (int w = 0; w < 8; w++) {
         for (int c = 0; c < 256; c++) {
-          if (cuda_layer_9_output[index4D(b,h,w,c,8,8,256)] >layer_10_threshold[c]) {
+          if (layer_9_output[b][h][w][c] >layer_10_threshold[c]) { // layer_9_output[b][h][w][c] / cuda_layer_9_output[index4D(b,h,w,c,8,8,256)]
             layer_10_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_10_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));
@@ -507,17 +507,17 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     }
   }
 
-  // unsigned long long *cuda_layer_10_output = (unsigned long long *) layer_10_output;
-  //  ^ direct pointer assignment leads to segmentation fault ^
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int h = 0; h < 8; h++) {
-      for (int w = 0; w < 8; w++) {
-        for (int c = 0; c < 256; c++) {
-          cuda_layer_10_output[index4D(b,h,w,c,8,8,256)] = layer_10_output[b][h][w][c];
-        }
-      }
-    }
-  }
+  // // unsigned long long *cuda_layer_10_output = (unsigned long long *) layer_10_output;
+  // //  ^ direct pointer assignment leads to segmentation fault ^
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 8; h++) {
+  //     for (int w = 0; w < 8; w++) {
+  //       for (int c = 0; c < 256; c++) {
+  //         cuda_layer_10_output[index4D(b,h,w,c,8,8,256)] = layer_10_output[b][h][w][c];
+  //       }
+  //     }
+  //   }
+  // }
   end = std::chrono::high_resolution_clock::now();
   auto l10_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
 
@@ -538,7 +538,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
               if (iW >= 0 && iW < 8) {
                 for (int m = 0; m < 512; m++) {
                   for (int c = 0; c < 4; c++) {
-                    layer_11_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_11_weight[kH][kW][m][c] ^ cuda_layer_10_output[index4D(b,iH,iW,c,8,8,256)])) - 64;
+                    layer_11_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_11_weight[kH][kW][m][c] ^ layer_10_output[b][iH][iW][c])) - 64; // layer_10_output[b][iH][iW][c] / cuda_layer_10_output[index4D(b,iH,iW,c,8,8,256)]
                   }
                 }
               }
@@ -594,7 +594,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     for (int h = 0; h < 8; h++) {
       for (int w = 0; w < 8; w++) {
         for (int c = 0; c < 512; c++) {
-          if (cuda_layer_11_output[index4D(b,h,w,c,8,8,512)] >layer_12_threshold[c]) {
+          if (layer_11_output[b][h][w][c] >layer_12_threshold[c]) { // layer_11_output[b][h][w][c] / cuda_layer_11_output[index4D(b,h,w,c,8,8,512)]
             layer_12_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_12_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));
@@ -604,17 +604,17 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     }
   }
 
-  // unsigned long long *cuda_layer_12_output = (unsigned long long *) layer_12_output;
-  //  ^ direct pointer assignment leads to segmentation fault ^
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int h = 0; h < 8; h++) {
-      for (int w = 0; w < 8; w++) {
-        for (int c = 0; c < 512; c++) {
-          cuda_layer_12_output[index4D(b,h,w,c,8,8,512)] = layer_12_output[b][h][w][c];
-        }
-      }
-    }
-  }
+  // // unsigned long long *cuda_layer_12_output = (unsigned long long *) layer_12_output;
+  // //  ^ direct pointer assignment leads to segmentation fault ^
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int h = 0; h < 8; h++) {
+  //     for (int w = 0; w < 8; w++) {
+  //       for (int c = 0; c < 512; c++) {
+  //         cuda_layer_12_output[index4D(b,h,w,c,8,8,512)] = layer_12_output[b][h][w][c];
+  //       }
+  //     }
+  //   }
+  // }
   end = std::chrono::high_resolution_clock::now();
   auto l12_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
 
@@ -635,7 +635,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
               if (iW >= 0 && iW < 8) {
                 for (int m = 0; m < 512; m++) {
                   for (int c = 0; c < 8; c++) {
-                    layer_13_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_13_weight[kH][kW][m][c] ^ cuda_layer_12_output[index4D(b,iH,iW,c,8,8,512)])) - 64;
+                    layer_13_output[b][h][w][m] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_13_weight[kH][kW][m][c] ^ layer_12_output[b][iH][iW][c])) - 64; // layer_12_output[b][iH][iW][c] / cuda_layer_12_output[index4D(b,iH,iW,c,8,8,512)]
                   }
                 }
               }
@@ -696,7 +696,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
         for (int kH = 0; kH < 2; kH++) {
           for (int kW = 0; kW < 2; kW++) {
             for (int c = 0; c < 512; c++) {
-              layer_14_output[b][h][w][c] = std::max(cuda_layer_13_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,8,8,512)], layer_14_output[b][h][w][c]);
+              layer_14_output[b][h][w][c] = std::max(layer_13_output[b][h * 2 + kH][w * 2 + kW][c], layer_14_output[b][h][w][c]); // layer_13_output[b][h * 2 + kH][w * 2 + kW][c] / cuda_layer_13_output[index4D(b,(h * 2 + kH),(w * 2 + kW),c,8,8,512)]
             }
           }
         }
@@ -749,7 +749,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     for (int h = 0; h < 4; h++) {
       for (int w = 0; w < 4; w++) {
         for (int c = 0; c < 512; c++) {
-          if (cuda_layer_14_output[index4D(b,h,w,c,4,4,512)] >layer_15_threshold[c]) {
+          if (layer_14_output[b][h][w][c] >layer_15_threshold[c]) { // layer_14_output[b][h][w][c] / cuda_layer_14_output[index4D(b,h,w,c,4,4,512)]
             layer_15_output[b][h][w][c / 64] |= (1ULL << (63 - c % 64));
           } else {
             layer_15_output[b][h][w][c / 64] &= ~(1ULL << (63 - c % 64));
@@ -819,7 +819,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
   start = std::chrono::high_resolution_clock::now();
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int d = 0; d < 1024; d++) {
-      if (cuda_layer_17_output[b*1024 + d] >layer_18_threshold[d]) {
+      if (layer_17_output[b][d] >layer_18_threshold[d]) { // layer_17_output[b][d] / cuda_layer_17_output[b*1024 + d]
         layer_18_output[b][d / 64] |= (1ULL << (63 - d % 64));
       } else {
         layer_18_output[b][d / 64] &= ~(1ULL << (63 - d % 64));
@@ -840,7 +840,7 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
     }
     for (int d = 0; d < 10; d++) {
       for (int i = 0; i < 16; i++) {
-        layer_19_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_19_weight[d][i] ^ cuda_layer_18_output[b*16+i])) - 64;
+        layer_19_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_19_weight[d][i] ^ layer_18_output[b][i])) - 64; // layer_18_output[b][i] / cuda_layer_18_output[b*16+i]
       }
     }
   }
@@ -879,9 +879,10 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
   // }
   // cout<<endl;
   
+  // WARNING! USE FIRST OPTION FOR Bnan PROFILING AND SECOND OPTION FOR GPU PROFILING
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int i = 0; i < 10; i++) {
-      pred[b*10 + i] += cuda_layer_19_output[b*10 + i];
+      pred[b*10 + i] += layer_19_output[b][i]; // layer_19_output[b][i] / cuda_layer_19_output[b*10 + i]
     }
   }
 

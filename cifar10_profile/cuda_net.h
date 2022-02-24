@@ -21,9 +21,9 @@ float layer8_conv(unsigned long long * layer1, float * layer2){
   return layer8_conv_cuda(layer1, layer2);
 }
 
-float layer9_maxpool(float * layer1, float * layer2){
-  return layer9_maxpool_cuda(layer1, layer2);
-}
+// float layer9_maxpool(float * layer1, float * layer2){
+//   return layer9_maxpool_cuda(layer1, layer2);
+// }
 
 float layer11_conv(unsigned long long * layer1, float * layer2){
   return layer11_conv_cuda(layer1, layer2);
@@ -33,9 +33,9 @@ float layer13_conv(unsigned long long * layer1, float * layer2){
   return layer13_conv_cuda(layer1, layer2);
 }
 
-float layer14_maxpool(float * layer1, float * layer2){
-  return layer14_maxpool_cuda(layer1, layer2);
-}
+// float layer14_maxpool(float * layer1, float * layer2){
+//   return layer14_maxpool_cuda(layer1, layer2);
+// }
 
 float layer17_gemm(unsigned long long * layer1, float * layer2){
   return layer17_gemm_cuda(layer1, layer2);

@@ -1348,14 +1348,14 @@ float layer1_conv_cuda(unsigned char x[][32][32][3], float * cuda_layer_1_output
     // allocate GPU device buffers
     cudaMalloc((void **) &d_cuda_layer_0_output, BATCH_SIZE*32*32*3*sizeof(unsigned char)); // 3072 = 32x32x3 dim of cuda_layer_0_output
     cudaMalloc((void **) &d_layer_1_bias, 128*sizeof(float)); // 128 = dim of layer_1_bias
-    cudaMalloc((void **) &d_cuda_layer_1_weight, 3*3*3*128*64*sizeof(signed char)); // 3456 = 3x3x3x128 dim of layer_1_weight
+    cudaMalloc((void **) &d_cuda_layer_1_weight, 3*3*3*128*sizeof(signed char)); // 3456 = 3x3x3x128 dim of layer_1_weight
     cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*32*32*128*sizeof(float)); // 131072 = 32x32x128 dim of layer_1_output
     cudaCheckErrors("Failed to allocate device buffer");
 
     // copy input data from host on device
     cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*32*32*3*sizeof(unsigned char)), cudaMemcpyHostToDevice);
     cudaMemcpy(d_layer_1_bias, layer_1_bias, (128*sizeof(float)), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (3*3*3*128*64*sizeof(signed char)), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (3*3*3*128*sizeof(signed char)), cudaMemcpyHostToDevice);
     cudaCheckErrors("CUDA memcpy failure");
 
     // define thread and block sizes
@@ -2124,7 +2124,7 @@ __global__ void layer14_maxpool_kernel(float *d_cuda_layer_13_output, float *d_c
 
     if(h<8 && w<8){
         if(b < BATCH_SIZE){
-            for(int c=0;c<256;c++) {
+            for(int c=0;c<512;c++) {
                 d_cuda_layer_14_output[index4D_cuda(b,h,w,c,4,4,512)] = lowest;
             }
         }
@@ -2132,7 +2132,7 @@ __global__ void layer14_maxpool_kernel(float *d_cuda_layer_13_output, float *d_c
         for (int kH = 0; kH < kernel_size; kH++){
             for (int kW = 0; kW < kernel_size; kW++){
                 if(b < BATCH_SIZE){
-                    for(int c=0;c<256;c++) {
+                    for(int c=0;c<512;c++) {
                         d_cuda_layer_14_output[index4D_cuda(b,h,w,c,4,4,512)] = fmax(d_cuda_layer_13_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,8,8,512)], d_cuda_layer_14_output[index4D_cuda(b,h,w,c,4,4,512)]);
                     }
                 }
@@ -2391,5 +2391,13 @@ float layer19_gemm_cuda(unsigned long long * cuda_layer_18_output, float * cuda_
 }
 
 // // PROFILE X =================================================================================================================================
+
+// ==============================================================================================================================================
+
+// // PROFILE XZ ================================================================================================================================
+
+
+
+// // PROFILE XZ ================================================================================================================================
 
 // ==============================================================================================================================================

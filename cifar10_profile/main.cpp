@@ -265,13 +265,13 @@ auto benchmark(bool verbose = false) {
         // cout<<"batch: "<<b<<":"<<endl;
         // total_kernel_time += predict_NeuralNet(img, output);
 
-        float a,b,c,d,e,f,g,h,ii,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,aa,bb,cc,dd;
-        std::tie(a,b,c,d,e,f,g,h,ii,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,aa,bb,cc,dd) = predict_NeuralNet(img, output);
+        float a,bb,c,d,e,f,g,h,ii,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,aa,bbb,cc,dd;
+        std::tie(a,bb,c,d,e,f,g,h,ii,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,aa,bbb,cc,dd) = predict_NeuralNet(img, output);
         total_kernel_time += a;
-        l1_time += b; l2_time += c; l3_time += d; l4_time += e; l5_time += f; l6_time += g; l7_time += h; l8_time += ii; l9_time += j;
+        l1_time += bb; l2_time += c; l3_time += d; l4_time += e; l5_time += f; l6_time += g; l7_time += h; l8_time += ii; l9_time += j;
         l10_time += k; l11_time += l; l12_time += m; l13_time += n; l14_time += o; l15_time += p; l17_time += q; l18_time += r; l19_time += s;
         l1_kernel_time += t; l3_kernel_time += u; l4_kernel_time += v; l6_kernel_time += w; l8_kernel_time += x; l9_kernel_time += y;
-        l11_kernel_time += z; l13_kernel_time += aa; l14_kernel_time += bb; l17_kernel_time += cc; l19_kernel_time += dd;
+        l11_kernel_time += z; l13_kernel_time += aa; l14_kernel_time += bbb; l17_kernel_time += cc; l19_kernel_time += dd;
 
         
         // for(int i = 0; i < bsize; i++){ 

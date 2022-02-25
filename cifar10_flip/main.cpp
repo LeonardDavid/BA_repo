@@ -56,10 +56,12 @@ auto benchmark(bool verbose = false) {
     int const imgsize = IMG_HEIGHT*IMG_WIDTH;
 
     size_t tsize = test_images[0].size();
-    // size_t tsize = 10; // for testing!
+    // size_t tsize = 2; // for testing!
 
     float total_kernel_time = 0;
     ofstream g("original_img_check.out");
+
+    cout<<"Executing "<<tsize<<" images in "<<ceil(float(tsize)/BATCH_SIZE)<<" batches of "<<BATCH_SIZE<<"..."<<endl<<endl;
 
     start = std::chrono::high_resolution_clock::now();
     /* using ceil() makes sure to execute even when division is not uniform: */
@@ -120,19 +122,21 @@ auto benchmark(bool verbose = false) {
         //     g<<endl<<endl<<endl;
         //     // cout<<endl<<endl<<endl;
         // }
+        // cout<<endl;
 
-        // cout<<i<<"(pred): "<<endl;
+        // cout<<"batch: "<<b<<":"<<endl;
 
         total_kernel_time += predict_NeuralNet(img, output);
 
-        // cout<<i<<"(outp): "<<endl;
-        // for (int b = 0; b < BATCH_SIZE; b++){
-        //     cout<<"b: "<<b<<": ";
-        //     for(int i=0;i<10;i++){
-        //         cout<<output[b*10 + i]<<", ";
+        
+        // for(int i = 0; i < bsize; i++){ 
+        //     cout<<"img: "<<b*BATCH_SIZE+i<<": ";
+        //     for(int j=0;j<10;j++){
+        //         cout<<output[i*10 + j]<<", ";
         //     }
         //     printf("\n");
         // }
+        // cout<<endl;
 
         for(int i = 0; i < bsize; i++){ 
             float max = output[i*OUT_SIZE];

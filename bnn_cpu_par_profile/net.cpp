@@ -246,7 +246,7 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   //   }
   //   for (int d = 0; d < 2048; d++) {
   //     for (int i = 0; i < 49; i++) {
-  //       cuda_layer_8_output[b*2048 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[d][i] ^ layer_7_output[i])) - 64;
+  //       cuda_layer_8_output[b*2048 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[d][i] ^ layer_7_output[b*49+i])) - 64;
   //     }
   //   }
   // }
@@ -288,7 +288,7 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   //   }
   //   for (int d = 0; d < 10; d++) {
   //     for (int i = 0; i < 32; i++) {
-  //       cuda_layer_10_output[b*10 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_10_weight[d][i] ^ cuda_layer_9_output[i])) - 64;
+  //       cuda_layer_10_output[b*10 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_10_weight[d][i] ^ cuda_layer_9_output[b*32+i])) - 64;
   //     }
   //   }
   // }
@@ -538,7 +538,7 @@ predict_NeuralNet(unsigned char * const x, float * output) {
 //     }
 //     for (int d = 0; d < 2048; d++) {
 //       for (int i = 0; i < 49; i++) {
-//         layer_8_output[b*2048 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[d][i] ^ layer_7_output[i])) - 64;
+//         layer_8_output[b*2048 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[d][i] ^ layer_7_output[b*49+i])) - 64;
 //       }
 //     }
 //   }

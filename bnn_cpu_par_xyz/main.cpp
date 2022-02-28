@@ -39,7 +39,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     float total_kernel_time = 0;
     
     auto start = std::chrono::high_resolution_clock::now();
-    for (unsigned int i = 0; i < lsize; i+=factor) { // i := # image
+    for (unsigned int i = 0; i < 2; i+=factor) { // i := # image
         std::fill(output, output+OUT_SIZE*BATCH_SIZE, 0);
        
         unsigned char * img;
@@ -55,21 +55,25 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
             label[b] = loaderx[b].labels(i); 
         }
         
-        // // display img array (remove for before)
-        // for(int b=0;b<BATCH_SIZE;b++){
-        //     printf("batch: %d, label %d:\n",b,label[b]);
-        //     for (int i = 0; i < 28; i++)
-        //     {
-        //         for (int j = 0; j < 28; j++)
-        //         {
-        //             // img[i*28 + j] < 128 ? img[i*28 + j] = 0 : img[i*28 + j] = 255;
-        //             printf("%d ", img[index3D(b,i,j,28,28)]);
-        //             // printf("%d ", img[i*28+j]);
-        //         }
-        //         printf("\n");
-        //     }
-        //     printf("\n\n");
-        // }
+        // display img array (remove for before)
+        float sum = 0;
+        for(int b=0;b<BATCH_SIZE;b++){
+            sum = 0;
+            cout<<"batch: "<<b<<", img: "<<i<<", label: "<<label[b]<<endl;
+            for (int i = 0; i < 28; i++)
+            {
+                for (int j = 0; j < 28; j++)
+                {
+                    // cout<<int(img[index3D(b,i,j,28,28)])<<" ";
+                    sum += img[index3D(b,i,j,28,28)];
+                }
+                // cout<<endl;
+            }
+            // cout<<endl<<endl;
+
+            cout<<"batch: "<<b<<", img: "<<b*BATCH_SIZE+i<<", sum: "<<sum<<endl;
+            // cout<<endl<<endl<<endl;
+        }
 
         total_kernel_time += predict_NeuralNet(img, output);
         

@@ -37,10 +37,9 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     int matches[1] = {0};
     int const imgsize = IMG_HEIGHT*IMG_WIDTH;
 
-    ofstream g("original_img_2.out");
-
     size_t lsize = loaderx[0].size();
-    // size_t lsize = 2; // for testing!
+    // size_t lsize = 2;                // for testing!
+    // ofstream g("original_img_2.out");
 
     float total_kernel_time = 0;
 
@@ -48,7 +47,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     
     auto start = std::chrono::high_resolution_clock::now();
     /* using ceil() makes sure to execute even when division is not uniform: */
-    for (unsigned int b = 0; b < ceil(float(lsize)/BATCH_SIZE); b+=factor) { // i := # image
+    for (unsigned int b = 0; b < ceil(float(lsize)/BATCH_SIZE); b+=factor) { // b := execute BATCH_SIZE number of images at a time
         std::fill(output, output+OUT_SIZE*BATCH_SIZE, 0);
        
         unsigned char * img;
@@ -59,7 +58,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
 
         size_t bsize = (b == lsize/BATCH_SIZE) ? (lsize % BATCH_SIZE) : BATCH_SIZE; // tsize
 
-        for(int i=0; i<bsize; i++){    // b := # batch
+        for(int i=0; i<bsize; i++){         // i := # batch
             for(int p=0; p<imgsize; p++){   // p := # pixel
                 img[i*imgsize+p] = loaderx[0].images(b*BATCH_SIZE + i)[p]; 
             }
@@ -112,6 +111,7 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     }
     auto end = std::chrono::high_resolution_clock::now();
 
+    /* stuff like [1] or for-loop with only 1 run-through are remains from code-porting from previous batch-type implementation */
     float accuracy[1];
     for(int b = 0; b < 1; b++){
         accuracy[b] = static_cast<float>(matches[b]) / (lsize/factor) * 100.f;
@@ -129,7 +129,9 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
 int main() {
 
     auto start = std::chrono::high_resolution_clock::now();
-    // load batches in a vector
+    /* load dataset in a vector ->
+     * stuff like [1] or for-loop with only 1 run-through are remains from code-porting from previous batch-type implementation 
+     */
     std::vector<MNISTLoader> loaderx(1);
     for(int i = 0; i < 1; i++){
         printf("Loading dataset %d...",i);
@@ -149,7 +151,7 @@ int main() {
         Therefore it is printed in benchmark()
         (if it is printed both in benchmark and here, both print the correct accuracy)
     */
-    // for(int b = 0; b < BATCH_SIZE; b++){
+    // for(int b = 0; b < 1; b++){
     //     printf("Accuracy batch %d: %.1f%\n", b, std::get<0>(results)[b]);
     // }
 

@@ -35,7 +35,10 @@ auto benchmark(vector<MNISTLoader> &loaderx, bool verbose = false) {
     int factor = 1;
     int matches[BATCH_SIZE] = {0};
     int const imgsize = IMG_HEIGHT*IMG_WIDTH;
+    
     int lsize = loaderx[0].size();
+    // size_t lsize = 1; // for testing!
+
     float total_kernel_time = 0;
     
     auto start = std::chrono::high_resolution_clock::now();

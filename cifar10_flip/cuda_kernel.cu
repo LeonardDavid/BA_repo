@@ -138,18 +138,6 @@ float layer1_conv_cuda(unsigned char x[][32][32][3], float * cuda_layer_1_output
     cudaFree(d_cuda_layer_1_output);
     cudaCheckErrors("cudaFree fail");
 
-    // // checksum L1 = 5720315.5
-    // float sum_gpu = 0;
-    // ofstream gg1("layer1/par.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum_gpu = 0;
-    //     for(int i=b*32*32*128;i<(b+1)*32*32*128;i++){
-    //         sum_gpu += cuda_layer_1_output[i];
-    //         gg1<<cuda_layer_1_output[i]<<" ";  
-    //     }
-    //     cout<<fixed<<"layer 1(GPU): batch "<<b<<": "<<sum_gpu<<endl;
-    // }
-    
     return milliseconds;
 }
 

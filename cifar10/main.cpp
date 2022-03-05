@@ -1,8 +1,14 @@
-// /*
-//     I believe these args were used in generating the code:
-//     --base-implementation: cpp.NHWC
-//     --implementation: cpp.binary
-// */
+/*
+    I believe these args were used in generating the code:
+    --base-implementation: cpp.NHWC
+    --implementation: cpp.binary
+*/
+
+/*
+    Run with: 
+    $ make
+    $ ./cifar.o
+*/
 
 #include <iostream>
 #include <chrono>
@@ -53,12 +59,14 @@ auto benchmark(bool verbose = false) {
     int factor = 1;
     int matches[BATCH_SIZE] = {0};
     int const imgsize = IMG_HEIGHT*IMG_WIDTH;
+
     size_t tsize = test_images[0].size();
+    // size_t tsize = 1; // for testing!
 
     float total_kernel_time = 0;
 
     start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < tsize; i+=factor) { // tsize
+    for (int i = 0; i < tsize; i+=factor) {
 
         int label[BATCH_SIZE];
         unsigned char img[BATCH_SIZE][32][32][3];
@@ -68,7 +76,7 @@ auto benchmark(bool verbose = false) {
         // img = (unsigned char*) malloc (BATCH_SIZE*imgsize*NR_CHANNELS);
 
         for(int b = 0; b < BATCH_SIZE; b++){
-            for (int j = 0; j < test_images[b][i].size(); j++) { // DO NOT USE tsize HERE! CRUICAL!
+            for (int j = 0; j < test_images[b][i].size(); j++) {
                 int d3 = j / 1024;
                 int minus = j % 1024;
                 int d2 = minus % 32;
@@ -104,19 +112,7 @@ auto benchmark(bool verbose = false) {
         //     // g<<endl<<endl<<endl;
         //     cout<<endl<<endl<<endl;
         // }
-
-        // cout<<i<<"(pred): "<<endl;
-
         total_kernel_time += predict_NeuralNet(img, output);
-
-        // cout<<i<<"(outp): "<<endl;
-        // for (int b = 0; b < BATCH_SIZE; b++){
-        //     cout<<"b: "<<b<<": ";
-        //     for(int i=0;i<10;i++){
-        //         cout<<output[b*10 + i]<<", ";
-        //     }
-        //     printf("\n");
-        // }
 
         for(int b = 0; b < BATCH_SIZE; b++){ 
             float max = output[b*OUT_SIZE];
@@ -127,13 +123,10 @@ auto benchmark(bool verbose = false) {
                     argmax = j;
                 }
             }
-            // cout<<i<<": "<<argmax<<"=="<<label[b]<<endl;
             if (argmax == label[b]) {
-                // cout<<matches[b]<<": "<<argmax<<"=="<<label[b]<<endl;
                 matches[b]++;
             }
         }
-        // printf("\n\n");
     }
     end = std::chrono::high_resolution_clock::now();
     
@@ -154,6 +147,7 @@ auto benchmark(bool verbose = false) {
 int main() {
     
     auto results = benchmark();
+    
     printf("\n");
     printf("Total CPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<1>(results)/1000.0f, std::get<2>(results));
     printf("Total GPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<3>(results)/1000.0f, std::get<4>(results));

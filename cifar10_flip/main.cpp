@@ -1,8 +1,14 @@
-// /*
-//     I believe these args were used in generating the code:
-//     --base-implementation: cpp.NHWC
-//     --implementation: cpp.binary
-// */
+/*
+    I believe these args were used in generating the code:
+    --base-implementation: cpp.NHWC
+    --implementation: cpp.binary
+*/
+
+/*
+    Run with: 
+    $ make
+    $ ./cifar.o
+*/
 
 #include <iostream>
 #include <chrono>
@@ -33,7 +39,9 @@ auto benchmark(bool verbose = false) {
     float output[OUT_SIZE*BATCH_SIZE] = {0};
 #endif
 
-    // load batches in a vector
+    /* load dataset in a vector ->
+     * stuff like [1] or for-loop with only 1 run-through are remains from code-porting from previous batch-type implementation 
+     */
     auto start = std::chrono::high_resolution_clock::now();
     // std::vector<cifar::CIFAR10_dataset<std::vector, std::vector<uint8_t>, uint8_t>> dataset(1);
     std::vector<std::vector<std::vector<uint8_t>>> test_images(1);
@@ -57,15 +65,15 @@ auto benchmark(bool verbose = false) {
 
     size_t tsize = test_images[0].size();
     // size_t tsize = 2; // for testing!
+    // ofstream g("original_img_check.out");
 
     float total_kernel_time = 0;
-    ofstream g("original_img_check.out");
 
     cout<<"Executing "<<tsize<<" images in "<<ceil(float(tsize)/BATCH_SIZE)<<" batches of "<<BATCH_SIZE<<"..."<<endl<<endl;
 
     start = std::chrono::high_resolution_clock::now();
     /* using ceil() makes sure to execute even when division is not uniform: */
-    for (int b = 0; b < ceil(float(tsize)/BATCH_SIZE); b+=factor) { // tsize/BATCH_SIZE
+    for (int b = 0; b < ceil(float(tsize)/BATCH_SIZE); b+=factor) { // b := execute BATCH_SIZE number of images at a time
 
         int label[BATCH_SIZE];
         unsigned char img[BATCH_SIZE][32][32][3];
@@ -79,10 +87,10 @@ auto benchmark(bool verbose = false) {
          * -> the last batch only has to execute a number of (tsize % BATCH_SIZE) images
          * else -> it executes a number of BATCH_SIZE images as usual
          */
-        size_t bsize = (b == tsize/BATCH_SIZE) ? (tsize % BATCH_SIZE) : BATCH_SIZE; // tsize
+        size_t bsize = (b == tsize/BATCH_SIZE) ? (tsize % BATCH_SIZE) : BATCH_SIZE;
 
         for(int i = 0; i < bsize; i++){
-            for (int j = 0; j < test_images[0][b*BATCH_SIZE+i].size(); j++) { // DO NOT USE tsize HERE! CRUICAL!
+            for (int j = 0; j < test_images[0][b*BATCH_SIZE+i].size(); j++) {
                 int d3 = j / 1024;
                 int minus = j % 1024;
                 int d2 = minus % 32;
@@ -124,19 +132,7 @@ auto benchmark(bool verbose = false) {
         // }
         // cout<<endl;
 
-        // cout<<"batch: "<<b<<":"<<endl;
-
         total_kernel_time += predict_NeuralNet(img, output);
-
-        
-        // for(int i = 0; i < bsize; i++){ 
-        //     cout<<"img: "<<b*BATCH_SIZE+i<<": ";
-        //     for(int j=0;j<10;j++){
-        //         cout<<output[i*10 + j]<<", ";
-        //     }
-        //     printf("\n");
-        // }
-        // cout<<endl;
 
         for(int i = 0; i < bsize; i++){ 
             float max = output[i*OUT_SIZE];
@@ -147,16 +143,14 @@ auto benchmark(bool verbose = false) {
                     argmax = j;
                 }
             }
-            // cout<<i<<": "<<argmax<<"=="<<label[b]<<endl;
             if (argmax == label[i]) {
-                // cout<<matches[b]<<": "<<argmax<<"=="<<label[b]<<endl;
                 matches[0]++;
             }
         }
-        // printf("\n\n");
     }
     end = std::chrono::high_resolution_clock::now();
     
+    /* stuff like [1] or for-loop with only 1 run-through are remains from code-porting from previous batch-type implementation */
     float accuracy[1];
     for(int b = 0; b < 1; b++){
         accuracy[b] = static_cast<float>(matches[b]) / (tsize/factor) * 100.f;
@@ -174,6 +168,7 @@ auto benchmark(bool verbose = false) {
 int main() {
     
     auto results = benchmark();
+
     printf("\n");
     printf("Total CPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<1>(results)/1000.0f, std::get<2>(results));
     printf("Total GPU time: %.2f [s] => Latency: %.4f [ms/elem]\n", std::get<3>(results)/1000.0f, std::get<4>(results));

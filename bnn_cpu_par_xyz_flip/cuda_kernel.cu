@@ -170,7 +170,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     const int GRIDYSIZE = 28;
     const int GRIDZSIZE = NR_NEURONS;
     
-    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 28 iterations each
+    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE);
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
 
     // timing of the kernel
@@ -201,17 +201,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
     cudaFree(d_cuda_layer_1_output);
     cudaCheckErrors("cudaFree fail");
     
-    // checksum L1 = -605468.812500
-    /*
-        Note: observed small discrepency when calculating the sum in separate program:
-        for 1 batch of 50176 elements:
-            (-sum original: -605468.8125)
-            - sum here:     -605468.8125
-            - sum separate: -605476.240866
-        this difference is constant, could be caused by rounding errors
-        the outputs appear to be the same as the original implementation (including the sum)
-        -> not important for now, but good to know in case something does not add up later
-    */
+    // // checksum L1 = -605468.812500
     // float sum = 0;
     // ofstream g("layer_1_par.out");
     // for(int b=0;b<BATCH_SIZE;b++){
@@ -304,7 +294,7 @@ float layer2_maxpool_cuda(float * cuda_layer_1_output, float * cuda_layer_2_outp
     const int GRIDYSIZE = 14;
     const int GRIDZSIZE = NR_NEURONS;
 
-    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 foor loops 14 iterations each
+    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE);
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
 
     // std library not allowed on device
@@ -395,7 +385,6 @@ __global__ void layer4_conv_kernel(unsigned long long *d_cuda_layer_3_output, fl
                         if(b<BATCH_SIZE){
                             if(m<NR_NEURONS) {
                                 for (int c = 0; c < 1; c++) {
-                                    // atomicAddShort(&d_cuda_layer_4_output[index3D_cuda(h,w,m,14,64)], 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index3D_cuda(iH,iW,c,14,64)])) - 64);
                                     d_cuda_layer_4_output[index4D_cuda(b,h,w,m,14,14,64)] += 2 * __popcll((unsigned long long)~(unsigned long long)(d_cuda_layer_4_weight[index4D_cuda(kH,kW,m,c,3,64,1)] ^ d_cuda_layer_3_output[index4D_cuda(b,iH,iW,c,14,14,64)])) - 64;
                                 }
                             }
@@ -442,7 +431,7 @@ float layer4_conv_cuda(unsigned long long * cuda_layer_3_output, signed short * 
     const int GRIDYSIZE = 14;
     const int GRIDZSIZE = NR_NEURONS;
 
-    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 14 iterations each
+    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE);
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
 
     // timing of the kernel
@@ -564,7 +553,7 @@ float layer5_maxpool_cuda(signed short * cuda_layer_4_output, signed short * cud
     const int GRIDYSIZE = 7;
     const int GRIDZSIZE = NR_NEURONS;
 
-    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 foor loops 7 iterations each
+    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE);
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
 
     // std library not allowed on device
@@ -674,7 +663,7 @@ float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * 
     const int GRIDYSIZE = 1;
     const int GRIDZSIZE = 2;
 
-    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // 1 for loop 2048 iterations
+    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE);
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
 
     // timing of the kernel
@@ -779,7 +768,7 @@ float layer10_gemm_cuda(unsigned long long * cuda_layer_9_output, signed short *
     const int GRIDXSIZE = BATCH_SIZE;
     const int GRIDYSIZE = 1;
 
-    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // 1 for loop 10 iterations
+    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE);
     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE);
 
     // timing of the kernel

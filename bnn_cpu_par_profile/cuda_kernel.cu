@@ -1530,7 +1530,7 @@ float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
 __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cuda_layer_2_output, float lowest){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
+    int h = threadIdx.x;
     int w = blockDim.y * blockIdx.y + threadIdx.y;
     int c = blockIdx.z;
 

@@ -15,54 +15,54 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   // add all kernel_time s
   float kernel_time = 0, malloc_time = 0, cpy_time = 0;
   /* Layer 1 GPU */
-  auto start = std::chrono::high_resolution_clock::now();
-
-    // float a,b,c;
-    // std::tie(a,b,c) = layer1_conv(x, cuda_layer_1_output);
-    // kernel_time += a; malloc_time += b, cpy_time += c;
-
-  kernel_time += layer1_conv(x, cuda_layer_1_output);
-  auto end = std::chrono::high_resolution_clock::now();
-  auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  float l1_kernel_time = kernel_time;
-  l1_time -= l1_kernel_time*1000000.0f; // ms->ns
-
-  /* Layer 1 CPU */
-  // // initialize layer_0_output where x is the input image
-  // unsigned char (*layer_0_output)[BATCH_SIZE][28][1] = (unsigned char (*)[BATCH_SIZE][28][1]) x;
-
-  // // flatten layer_0_output
-  // unsigned char *cuda_layer_0_output = (unsigned char *) layer_0_output;
-
   // auto start = std::chrono::high_resolution_clock::now();
-  // // Layer 1: Conv @ cpp.NHWC {% else %} /{% if pads == [0, 0, 0, 0] %}
-  // for(int b = 0; b < BATCH_SIZE; b++){
-  //   for (int h = 0; h < 28; h++) {
-  //     for (int w = 0; w < 28; w++) {
-  //       for (int m = 0; m < 64; m++) {
-  //         cuda_layer_1_output[index4D(b,h,w,m,28,28,64)] = layer_1_bias[m];
-  //       }
-  //       for (int kH = 0; kH < 3; kH++) {
-  //         int iH = h * 1 + kH - 1;
-  //         if (iH >= 0 && iH < 28) {
-  //           for (int kW = 0; kW < 3; kW++) {
-  //             int iW = w * 1 + kW - 1;
-  //             if (iW >= 0 && iW < 28) {
-  //               for (int c = 0; c < 1; c++) {
-  //                 for (int m = 0; m < 64; m++) {
-  //                   cuda_layer_1_output[index4D(b,h,w,m,28,28,64)] += layer_1_weight[kH][kW][c][m] * cuda_layer_0_output[index4D(b,iH,iW,c,28,28,1)];
-  //                 }
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
+
+  //   // float a,b,c;
+  //   // std::tie(a,b,c) = layer1_conv(x, cuda_layer_1_output);
+  //   // kernel_time += a; malloc_time += b, cpy_time += c;
+
+  // kernel_time += layer1_conv(x, cuda_layer_1_output);
   // auto end = std::chrono::high_resolution_clock::now();
   // auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  // float l1_kernel_time = 0;
+  // float l1_kernel_time = kernel_time;
+  // l1_time -= l1_kernel_time*1000000.0f; // ms->ns
+
+  /* Layer 1 CPU */
+  // initialize layer_0_output where x is the input image
+  unsigned char (*layer_0_output)[BATCH_SIZE][28][1] = (unsigned char (*)[BATCH_SIZE][28][1]) x;
+
+  // flatten layer_0_output
+  unsigned char *cuda_layer_0_output = (unsigned char *) layer_0_output;
+
+  auto start = std::chrono::high_resolution_clock::now();
+  // Layer 1: Conv @ cpp.NHWC {% else %} /{% if pads == [0, 0, 0, 0] %}
+  for(int b = 0; b < BATCH_SIZE; b++){
+    for (int h = 0; h < 28; h++) {
+      for (int w = 0; w < 28; w++) {
+        for (int m = 0; m < 64; m++) {
+          cuda_layer_1_output[index4D(b,h,w,m,28,28,64)] = layer_1_bias[m];
+        }
+        for (int kH = 0; kH < 3; kH++) {
+          int iH = h * 1 + kH - 1;
+          if (iH >= 0 && iH < 28) {
+            for (int kW = 0; kW < 3; kW++) {
+              int iW = w * 1 + kW - 1;
+              if (iW >= 0 && iW < 28) {
+                for (int c = 0; c < 1; c++) {
+                  for (int m = 0; m < 64; m++) {
+                    cuda_layer_1_output[index4D(b,h,w,m,28,28,64)] += layer_1_weight[kH][kW][c][m] * cuda_layer_0_output[index4D(b,iH,iW,c,28,28,1)];
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  float l1_kernel_time = 0;
 
   /* Layer 2 GPU */
   // start = std::chrono::high_resolution_clock::now();

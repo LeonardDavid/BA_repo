@@ -5497,7 +5497,7 @@ using namespace std;
 
 // float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * cuda_layer_8_output){
 
-//     setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
+//     // setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
 
 //     // flatten 3D -> 1D arrays
 //     // flatten layer_8_weight
@@ -5744,7 +5744,7 @@ using namespace std;
 
 // float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * cuda_layer_8_output){
 
-//     setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
+//     // setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
 
 //     // flatten 3D -> 1D arrays
 //     // flatten layer_8_weight
@@ -6086,7 +6086,7 @@ __global__ void layer8_gemm_kernel(unsigned long long *d_cuda_layer_7_output, fl
 
 float layer8_gemm_cuda(unsigned long long * cuda_layer_7_output, signed short * cuda_layer_8_output){
 
-    setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
+    // setUniGPU(); // use the second GPU on Uni-server because the first is used most of the time
 
     // flatten 3D -> 1D arrays
     // flatten layer_8_weight

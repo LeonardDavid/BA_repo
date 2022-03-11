@@ -1543,7 +1543,11 @@ __global__ void layer2_maxpool_kernel(float *d_cuda_layer_1_output, float *d_cud
                 for (int kW = 0; kW < 2; kW++) {
                     for(int b = 0; b < BATCH_SIZE; b++){
                         if(c<NR_NEURONS) {
-                            d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)]);
+                            // d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)] = fmax(d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)], d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)]);
+                            d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)] = 
+                            (d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)] >= d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)]) ? 
+                            d_cuda_layer_1_output[index4D_cuda(b,(h * 2 + kH),(w * 2 + kW),c,28,28,64)] : d_cuda_layer_2_output[index4D_cuda(b,h,w,c,14,14,64)];
+                    
                         }
                     }
                 }

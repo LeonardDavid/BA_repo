@@ -1,4 +1,4 @@
-#define BATCH_SIZE 1
+#define BATCH_SIZE 2
 #define NR_NEURONS 64
 #define IMG_HEIGHT 28   // original input image
 #define IMG_WIDTH 28    // original input image

@@ -230,29 +230,29 @@ predict_NeuralNet(unsigned char * const x, float * output) {
   unsigned long long *layer_7_output = (unsigned long long *) layer_6_output; // size = 49
   
   /* Layer 8 GPU */
-  // start = std::chrono::high_resolution_clock::now();
-  // kernel_time += layer8_gemm(layer_7_output, cuda_layer_8_output);
-  // end = std::chrono::high_resolution_clock::now();  
-  // auto l8_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  // float l8_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time);
-  // l8_time -= l8_kernel_time*1000000.0f; // ms->ns
-
-  /* Layer 8 CPU */
-  // Layer 8: Gemm @ cpp.binary 
   start = std::chrono::high_resolution_clock::now();
-  for(int b = 0; b < BATCH_SIZE; b++){
-    for (int d = 0; d < 2048; d++) {
-      cuda_layer_8_output[b*2048 + d] = layer_8_bias[d];
-    }
-    for (int d = 0; d < 2048; d++) {
-      for (int i = 0; i < 49; i++) {
-        cuda_layer_8_output[b*2048 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[d][i] ^ layer_7_output[b*49+i])) - 64;
-      }
-    }
-  }
+  kernel_time += layer8_gemm(layer_7_output, cuda_layer_8_output);
   end = std::chrono::high_resolution_clock::now();  
   auto l8_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  float l8_kernel_time = 0;
+  float l8_kernel_time = kernel_time-(l1_kernel_time+l2_kernel_time+l4_kernel_time+l5_kernel_time);
+  l8_time -= l8_kernel_time*1000000.0f; // ms->ns
+
+  /* Layer 8 CPU */
+  // // Layer 8: Gemm @ cpp.binary 
+  // start = std::chrono::high_resolution_clock::now();
+  // for(int b = 0; b < BATCH_SIZE; b++){
+  //   for (int d = 0; d < 2048; d++) {
+  //     cuda_layer_8_output[b*2048 + d] = layer_8_bias[d];
+  //   }
+  //   for (int d = 0; d < 2048; d++) {
+  //     for (int i = 0; i < 49; i++) {
+  //       cuda_layer_8_output[b*2048 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_8_weight[d][i] ^ layer_7_output[b*49+i])) - 64;
+  //     }
+  //   }
+  // }
+  // end = std::chrono::high_resolution_clock::now();  
+  // auto l8_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  // float l8_kernel_time = 0;
 
   // layer9_step(cuda_layer_8_output, cuda_layer_9_output);
   /* Layer 9 CPU */

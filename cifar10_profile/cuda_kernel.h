@@ -18,6 +18,6 @@ float layer13_conv_cuda(unsigned long long * layer1, float * layer2);
 
 // float layer14_maxpool_cuda(float * layer1, float * layer2);
 
-// float layer17_gemm_cuda(unsigned long long * layer1, float * layer2);
+float layer17_gemm_cuda(unsigned long long * layer1, float * layer2);
 
 // float layer19_gemm_cuda(unsigned long long * layer1, float * layer2);

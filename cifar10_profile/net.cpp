@@ -769,21 +769,21 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
   unsigned long long *cuda_layer_16_output = (unsigned long long *) layer_15_output;
 
   /* Layer 17 CPU */
-  // Layer 17: Gemm @ cpp.binary
-  start = std::chrono::high_resolution_clock::now();
-  for (int b = 0; b < BATCH_SIZE; b++){
-    for (int d = 0; d < 1024; d++) {
-      cuda_layer_17_output[b*1024 + d] = layer_17_bias[d];
-    }
-    for (int d = 0; d < 1024; d++) {
-      for (int i = 0; i < 128; i++) {
-        cuda_layer_17_output[b*1024 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ cuda_layer_16_output[b*128 + i])) - 64; // b*128+i ?
-      }
-    }
-  }
-  end = std::chrono::high_resolution_clock::now();
-  auto l17_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  float l17_kernel_time = 0;     
+  // // Layer 17: Gemm @ cpp.binary
+  // start = std::chrono::high_resolution_clock::now();
+  // for (int b = 0; b < BATCH_SIZE; b++){
+  //   for (int d = 0; d < 1024; d++) {
+  //     cuda_layer_17_output[b*1024 + d] = layer_17_bias[d];
+  //   }
+  //   for (int d = 0; d < 1024; d++) {
+  //     for (int i = 0; i < 128; i++) {
+  //       cuda_layer_17_output[b*1024 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ cuda_layer_16_output[b*128 + i])) - 64; // b*128+i ?
+  //     }
+  //   }
+  // }
+  // end = std::chrono::high_resolution_clock::now();
+  // auto l17_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  // float l17_kernel_time = 0;     
 
   // // checksum L17 = 10874.058594
   // ofstream g17("layer17/orig.out");
@@ -797,12 +797,12 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
   // }
 
   /* Layer 17 GPU */
-  // start = std::chrono::high_resolution_clock::now();
-  // kernel_time += layer17_gemm(cuda_layer_16_output, cuda_layer_17_output);
-  // end = std::chrono::high_resolution_clock::now();    
-  // auto l17_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
-  // float l17_kernel_time = kernel_time-(l1_kernel_time+l3_kernel_time+l4_kernel_time+l6_kernel_time+l8_kernel_time+l9_kernel_time+l11_kernel_time+l13_kernel_time+l14_kernel_time);
-  // l17_time -= l17_kernel_time*1000000.0f; // ms->ns
+  start = std::chrono::high_resolution_clock::now();
+  kernel_time += layer17_gemm(cuda_layer_16_output, cuda_layer_17_output);
+  end = std::chrono::high_resolution_clock::now();    
+  auto l17_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());  
+  float l17_kernel_time = kernel_time-(l1_kernel_time+l3_kernel_time+l4_kernel_time+l6_kernel_time+l8_kernel_time+l9_kernel_time+l11_kernel_time+l13_kernel_time+l14_kernel_time);
+  l17_time -= l17_kernel_time*1000000.0f; // ms->ns
 
   // // checksum L17 = 10874.058594
   // ofstream gg17("layer17/par.out");

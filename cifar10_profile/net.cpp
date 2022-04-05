@@ -21,34 +21,34 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
   float sum_gpu = 0;
   /* Layer 1 CPU */
   // Layer 1: Conv @ cpp.NHWC {% else %} /{% if pads == [0, 0, 0, 0] %}
-  // auto start = std::chrono::high_resolution_clock::now();
-  // for (int b = 0; b < BATCH_SIZE; b++){
-  //   for (int h = 0; h < 32; h++) {
-  //     for (int w = 0; w < 32; w++) {
-  //       for (int m = 0; m < 128; m++) {
-  //         cuda_layer_1_output[index4D(b,h,w,m,32,32,128)] = layer_1_bias[m]; // layer_1_output[b][h][w][m] / cuda_layer_1_output[index4D(b,h,w,m,32,32,128)]
-  //       }
-  //       for (int kH = 0; kH < 3; kH++) {
-  //         int iH = h * 1 + kH - 1;
-  //         if (iH >= 0 && iH < 32) {
-  //           for (int kW = 0; kW < 3; kW++) {
-  //             int iW = w * 1 + kW - 1;
-  //             if (iW >= 0 && iW < 32) {
-  //               for (int c = 0; c < 3; c++) {
-  //                 for (int m = 0; m < 128; m++) {
-  //                   cuda_layer_1_output[index4D(b,h,w,m,32,32,128)] += layer_1_weight[kH][kW][c][m] * x[b][iH][iW][c]; // layer_1_output[b][h][w][m] / cuda_layer_1_output[index4D(b,h,w,m,32,32,128)] // x[b][iH][iW][c] / x[index4D(b,iH,iW,c,32,32,3)]
-  //                 }
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-  // auto end = std::chrono::high_resolution_clock::now();
-  // auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  // float l1_kernel_time = 0;
+  auto start = std::chrono::high_resolution_clock::now();
+  for (int b = 0; b < BATCH_SIZE; b++){
+    for (int h = 0; h < 32; h++) {
+      for (int w = 0; w < 32; w++) {
+        for (int m = 0; m < 128; m++) {
+          cuda_layer_1_output[index4D(b,h,w,m,32,32,128)] = layer_1_bias[m]; // layer_1_output[b][h][w][m] / cuda_layer_1_output[index4D(b,h,w,m,32,32,128)]
+        }
+        for (int kH = 0; kH < 3; kH++) {
+          int iH = h * 1 + kH - 1;
+          if (iH >= 0 && iH < 32) {
+            for (int kW = 0; kW < 3; kW++) {
+              int iW = w * 1 + kW - 1;
+              if (iW >= 0 && iW < 32) {
+                for (int c = 0; c < 3; c++) {
+                  for (int m = 0; m < 128; m++) {
+                    cuda_layer_1_output[index4D(b,h,w,m,32,32,128)] += layer_1_weight[kH][kW][c][m] * x[b][iH][iW][c]; // layer_1_output[b][h][w][m] / cuda_layer_1_output[index4D(b,h,w,m,32,32,128)] // x[b][iH][iW][c] / x[index4D(b,iH,iW,c,32,32,3)]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  float l1_kernel_time = 0;
 
   // // checksum L1 = 5720315.5
   // ofstream g1("layer1/orig.out");
@@ -66,12 +66,12 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
   // }
 
   /* Layer 1 GPU */
-  auto start = std::chrono::high_resolution_clock::now();
-  kernel_time += layer1_conv(x, cuda_layer_1_output);
-  auto end = std::chrono::high_resolution_clock::now();
-  auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-  float l1_kernel_time = kernel_time;
-  l1_time -= l1_kernel_time*1000000.0f; // ms->ns
+  // auto start = std::chrono::high_resolution_clock::now();
+  // kernel_time += layer1_conv(x, cuda_layer_1_output);
+  // auto end = std::chrono::high_resolution_clock::now();
+  // auto l1_time = static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
+  // float l1_kernel_time = kernel_time;
+  // l1_time -= l1_kernel_time*1000000.0f; // ms->ns
 
   // // checksum L1 = 5720315.5
   // ofstream gg1("layer1/par.out");

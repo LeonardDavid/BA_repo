@@ -1387,144 +1387,144 @@ using namespace std;
 
 // // PROFILE Z =================================================================================================================================
 
-// Layer 1 - Convolution
+// // Layer 1 - Convolution
 
-__global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *d_layer_1_bias, signed char *d_cuda_layer_1_weight, float *d_cuda_layer_1_output){
+// __global__ void layer1_conv_kernel(unsigned char *d_cuda_layer_0_output, float *d_layer_1_bias, signed char *d_cuda_layer_1_weight, float *d_cuda_layer_1_output){
 
-    int h = blockDim.x * blockIdx.x + threadIdx.x;
-    int w = blockDim.y * blockIdx.y + threadIdx.y;
-    int m = blockIdx.z;
+//     int h = blockDim.x * blockIdx.x + threadIdx.x;
+//     int w = blockDim.y * blockIdx.y + threadIdx.y;
+//     int m = blockIdx.z;
     
-    if (h<28 && w<28){
-        for(int b=0;b<BATCH_SIZE;b++){
-            if(m<NR_NEURONS) {
-                d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
-            }
+//     if (h<28 && w<28){
+//         for(int b=0;b<BATCH_SIZE;b++){
+//             if(m<NR_NEURONS) {
+//                 d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] = d_layer_1_bias[m];
+//             }
         
-            for (int kH = 0; kH < 3; kH++) {
-            int iH = h * 1 + kH - 1;
-            if (iH >= 0 && iH < 28) {
-                for (int kW = 0; kW < 3; kW++) {
-                int iW = w * 1 + kW - 1;
-                if (iW >= 0 && iW < 28) {
-                    for (int c = 0; c < 1; c++) {
-                        if(m<NR_NEURONS) {
-                            d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
-                        }
-                    }
-                }
-                }
-            }
-            }
-        }
-    }
-}
+//             for (int kH = 0; kH < 3; kH++) {
+//             int iH = h * 1 + kH - 1;
+//             if (iH >= 0 && iH < 28) {
+//                 for (int kW = 0; kW < 3; kW++) {
+//                 int iW = w * 1 + kW - 1;
+//                 if (iW >= 0 && iW < 28) {
+//                     for (int c = 0; c < 1; c++) {
+//                         if(m<NR_NEURONS) {
+//                             d_cuda_layer_1_output[index4D_cuda(b,h,w,m,28,28,64)] += d_cuda_layer_1_weight[index4D_cuda(kH,kW,c,m,3,1,64)] * d_cuda_layer_0_output[index4D_cuda(b,iH,iW,c,28,28,1)];
+//                         }
+//                     }
+//                 }
+//                 }
+//             }
+//             }
+//         }
+//     }
+// }
 
-float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
+// float layer1_conv_cuda(unsigned char * const x, float * cuda_layer_1_output){
 
-    // size_t free, total;
-    // printf("\n");
-    // cudaMemGetInfo(&free,&total);   
-    // printf("before: %d KB free of total %d KB\n",free/1024,total/1024);
+//     // size_t free, total;
+//     // printf("\n");
+//     // cudaMemGetInfo(&free,&total);   
+//     // printf("before: %d KB free of total %d KB\n",free/1024,total/1024);
     
-    // initialize layer_0_output where x is the input image
-    unsigned char (*layer_0_output)[BATCH_SIZE][28][1] = (unsigned char (*)[BATCH_SIZE][28][1]) x;
+//     // initialize layer_0_output where x is the input image
+//     unsigned char (*layer_0_output)[BATCH_SIZE][28][1] = (unsigned char (*)[BATCH_SIZE][28][1]) x;
 
-    // flatten 3D -> 1D arrays
-    // flatten layer_1_weight
-    signed char *cuda_layer_1_weight = (signed char *) layer_1_weight;
+//     // flatten 3D -> 1D arrays
+//     // flatten layer_1_weight
+//     signed char *cuda_layer_1_weight = (signed char *) layer_1_weight;
 
-    // flatten layer_0_output
-    unsigned char *cuda_layer_0_output = (unsigned char *) layer_0_output;
+//     // flatten layer_0_output
+//     unsigned char *cuda_layer_0_output = (unsigned char *) layer_0_output;
     
-    // prepare for kernel call
-    // declare storage on device
-    unsigned char *d_cuda_layer_0_output; // storage on device for cuda_layer_0_output
-    float *d_layer_1_bias; // storage on device for layer_1_bias
-    signed char *d_cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
-    float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
+//     // prepare for kernel call
+//     // declare storage on device
+//     unsigned char *d_cuda_layer_0_output; // storage on device for cuda_layer_0_output
+//     float *d_layer_1_bias; // storage on device for layer_1_bias
+//     signed char *d_cuda_layer_1_weight; // storage on device for cuda_layer_1_weight
+//     float *d_cuda_layer_1_output; // RESULT storage on device for cuda_layer_1_output
 
-    // allocate GPU device buffers
-    cudaMalloc((void **) &d_cuda_layer_0_output, BATCH_SIZE*784*sizeof(unsigned char)); // 784 = 28x28 dim of cuda_layer_0_output
-    cudaMalloc((void **) &d_layer_1_bias, 64*sizeof(float)); // 64 = dim of layer_1_bias
-    cudaMalloc((void **) &d_cuda_layer_1_weight, 576*sizeof(signed char)); // 576 = 3x3x1x64 dim of layer_1_weight
-    cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
-    cudaCheckErrors("Failed to allocate device buffer");
+//     // allocate GPU device buffers
+//     cudaMalloc((void **) &d_cuda_layer_0_output, BATCH_SIZE*784*sizeof(unsigned char)); // 784 = 28x28 dim of cuda_layer_0_output
+//     cudaMalloc((void **) &d_layer_1_bias, 64*sizeof(float)); // 64 = dim of layer_1_bias
+//     cudaMalloc((void **) &d_cuda_layer_1_weight, 576*sizeof(signed char)); // 576 = 3x3x1x64 dim of layer_1_weight
+//     cudaMalloc((void **) &d_cuda_layer_1_output, BATCH_SIZE*50176*sizeof(float)); // 50176 = 28x28x64 dim of layer_1_output
+//     cudaCheckErrors("Failed to allocate device buffer");
 
-    // cudaMemGetInfo(&free,&total);   
-    // printf("after: %d KB free of total %d KB\n",free/1024,total/1024);
+//     // cudaMemGetInfo(&free,&total);   
+//     // printf("after: %d KB free of total %d KB\n",free/1024,total/1024);
 
-    // copy input data from host on device
-    cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*784*sizeof(unsigned char)), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_layer_1_bias, layer_1_bias, (64*sizeof(float)), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (576*sizeof(signed char)), cudaMemcpyHostToDevice);
-    cudaCheckErrors("CUDA memcpy failure");
+//     // copy input data from host on device
+//     cudaMemcpy(d_cuda_layer_0_output, cuda_layer_0_output, (BATCH_SIZE*784*sizeof(unsigned char)), cudaMemcpyHostToDevice);
+//     cudaMemcpy(d_layer_1_bias, layer_1_bias, (64*sizeof(float)), cudaMemcpyHostToDevice);
+//     cudaMemcpy(d_cuda_layer_1_weight, cuda_layer_1_weight, (576*sizeof(signed char)), cudaMemcpyHostToDevice);
+//     cudaCheckErrors("CUDA memcpy failure");
 
-    // define thread and block sizes
-    const int BLKXSIZE = 28;
-    const int BLKYSIZE = 28;
-    const int GRIDXSIZE = 1;
-    const int GRIDYSIZE = 1;
-    const int GRIDZSIZE = NR_NEURONS;
+//     // define thread and block sizes
+//     const int BLKXSIZE = 28;
+//     const int BLKYSIZE = 28;
+//     const int GRIDXSIZE = 1;
+//     const int GRIDYSIZE = 1;
+//     const int GRIDZSIZE = NR_NEURONS;
     
-    const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 28 iterations each
-    const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
+//     const dim3 threadsPerBlock(BLKXSIZE, BLKYSIZE); // the 2 for loops 28 iterations each
+//     const dim3 numBlocks(GRIDXSIZE, GRIDYSIZE, GRIDZSIZE);
 
-    // timing of the kernel
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    float milliseconds = 0;
+//     // timing of the kernel
+//     cudaEvent_t start, stop;
+//     cudaEventCreate(&start);
+//     cudaEventCreate(&stop);
+//     float milliseconds = 0;
 
-    // compute result - kernel call
-    cudaEventRecord(start);
-    layer1_conv_kernel<<<numBlocks,threadsPerBlock>>>(d_cuda_layer_0_output, d_layer_1_bias, d_cuda_layer_1_weight, d_cuda_layer_1_output);
-    cudaCheckErrors("Kernel launch failure");
-    cudaEventRecord(stop);
+//     // compute result - kernel call
+//     cudaEventRecord(start);
+//     layer1_conv_kernel<<<numBlocks,threadsPerBlock>>>(d_cuda_layer_0_output, d_layer_1_bias, d_cuda_layer_1_weight, d_cuda_layer_1_output);
+//     cudaCheckErrors("Kernel launch failure");
+//     cudaEventRecord(stop);
 
-    // synchronize threads
-    cudaDeviceSynchronize();
-    cudaCheckErrors("CUDA synchronize failure");
-    cudaEventElapsedTime(&milliseconds, start, stop);
+//     // synchronize threads
+//     cudaDeviceSynchronize();
+//     cudaCheckErrors("CUDA synchronize failure");
+//     cudaEventElapsedTime(&milliseconds, start, stop);
 
-    // copy result from device to host
-    cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (BATCH_SIZE*50176*sizeof(float)), cudaMemcpyDeviceToHost);
-    cudaCheckErrors("CUDA memcpy failure");
+//     // copy result from device to host
+//     cudaMemcpy(cuda_layer_1_output, d_cuda_layer_1_output, (BATCH_SIZE*50176*sizeof(float)), cudaMemcpyDeviceToHost);
+//     cudaCheckErrors("CUDA memcpy failure");
 
-    // free the memory
-    cudaFree(d_cuda_layer_0_output);
-    cudaFree(d_layer_1_bias);
-    cudaFree(d_cuda_layer_1_weight);
-    cudaFree(d_cuda_layer_1_output);
-    cudaCheckErrors("cudaFree fail");
+//     // free the memory
+//     cudaFree(d_cuda_layer_0_output);
+//     cudaFree(d_layer_1_bias);
+//     cudaFree(d_cuda_layer_1_weight);
+//     cudaFree(d_cuda_layer_1_output);
+//     cudaCheckErrors("cudaFree fail");
     
-    // checksum
-    /*
-        Note: observed small discrepency when calculating the sum in separate program:
-        for 1 batch of 50176 elements:
-            (-sum original: -605468.8125)
-            - sum here:     -605468.8125
-            - sum separate: -605476.240866
-        this difference is constant, could be caused by rounding errors
-        the outputs appear to be the same as the original implementation (including the sum)
-        -> not important for now, but good to know in case something does not add up later
-    */
-    // float sum = 0;
-    // ofstream g("layer_1_par.out");
-    // for(int b=0;b<BATCH_SIZE;b++){
-    //     sum=0;
-    //     for(int i=b*50176;i<(b+1)*50176;i++){
-    //         sum += cuda_layer_1_output[i];
-    //         g<<cuda_layer_1_output[i]<<" ";  
-    //         if((i+1)%64==0){
-    //             g<<endl;
-    //         }
-    //     }
-    //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
-    // }
-    // cout<<endl;
-    return milliseconds;
-}
+//     // checksum
+//     /*
+//         Note: observed small discrepency when calculating the sum in separate program:
+//         for 1 batch of 50176 elements:
+//             (-sum original: -605468.8125)
+//             - sum here:     -605468.8125
+//             - sum separate: -605476.240866
+//         this difference is constant, could be caused by rounding errors
+//         the outputs appear to be the same as the original implementation (including the sum)
+//         -> not important for now, but good to know in case something does not add up later
+//     */
+//     // float sum = 0;
+//     // ofstream g("layer_1_par.out");
+//     // for(int b=0;b<BATCH_SIZE;b++){
+//     //     sum=0;
+//     //     for(int i=b*50176;i<(b+1)*50176;i++){
+//     //         sum += cuda_layer_1_output[i];
+//     //         g<<cuda_layer_1_output[i]<<" ";  
+//     //         if((i+1)%64==0){
+//     //             g<<endl;
+//     //         }
+//     //     }
+//     //     cout<<fixed<<"batch "<<b<<": "<<sum<<endl;
+//     // }
+//     // cout<<endl;
+//     return milliseconds;
+// }
 
 // // Layer 2 - Maxpool
 

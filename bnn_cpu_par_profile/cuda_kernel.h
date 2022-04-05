@@ -1,6 +1,6 @@
 #include "utils.h"
 
-float layer1_conv_cuda(unsigned char * const x, float * layer); // std::tuple<float, float, float> 
+// float layer1_conv_cuda(unsigned char * const x, float * layer); // std::tuple<float, float, float> 
 
 // float layer2_maxpool_cuda(float * layer1, float * layer2);
 

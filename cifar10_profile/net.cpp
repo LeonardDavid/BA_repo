@@ -773,11 +773,11 @@ predict_NeuralNet(unsigned char x[][32][32][3], float * pred) { // unsigned char
   start = std::chrono::high_resolution_clock::now();
   for (int b = 0; b < BATCH_SIZE; b++){
     for (int d = 0; d < 1024; d++) {
-      layer_17_output[b][d] = layer_17_bias[d];
+      cuda_layer_17_output[b*1024 + d] = layer_17_bias[d];
     }
     for (int d = 0; d < 1024; d++) {
       for (int i = 0; i < 128; i++) {
-        layer_17_output[b][d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ cuda_layer_16_output[b*128 + i])) - 64; // b*128+i ?
+        cuda_layer_17_output[b*1024 + d] += 2 * __builtin_popcountll((unsigned long long)~(unsigned long long)(layer_17_weight[d][i] ^ cuda_layer_16_output[b*128 + i])) - 64; // b*128+i ?
       }
     }
   }
